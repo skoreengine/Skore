@@ -2,7 +2,9 @@
 // Use of this source code is governed by the license that can be found in the LICENSE file at the root of this distribution.
 
 #include "App.hpp"
+#include "Skore/Platform/Platform.hpp"
 #include <iostream>
+#include "Skore/Core/String.hpp"
 
 namespace Skore
 {
@@ -15,7 +17,11 @@ namespace Skore
 
 	void App::Init()
 	{
-		appContext.running = true;
+		String myString = {TEXT("blah")};
+
+		Platform::Init();
+
+		appContext.running = false;
 		std::cout << "Hello, Skore!" << std::endl;
 	}
 

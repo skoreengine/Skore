@@ -17,12 +17,20 @@ typedef signed long long i64;
 typedef float  f32;
 typedef double f64;
 
+typedef void      * CPtr;
+typedef const void* ConstCPtr;
+
+typedef decltype(sizeof(0)) usize;
+
+#define SK_STRING_BUFFER_SIZE 18
+
 #if _WIN64
 #   define SK_API __declspec(dllexport)
 #   define SK_WIN  1
 #   define SK_PATH_SEPARATOR '\\'
 #   define SK_SHARED_EXT ".dll"
 #   define SK_FINLINE __forceinline
+#   define TEXT(s) L##s
 #elif __linux__
 #   define SK_API   __attribute__ ((visibility ("default")))
 #   define SK_PATH_SEPARATOR '/'
@@ -30,15 +38,14 @@ typedef double f64;
 #   define SK_LINUX
 #   define SK_SHARED_EXT ".so"
 #   define SK_FINLINE inline
+#   define SK_TEXT(s) s
 #elif __APPLE__
 #   define SK_API
 #   define SK_PATH_SEPARATOR '/'
 #   define SK_UNIX
 #   define SK_SHARED_EXT ".dylib"
 #   define SK_FINLINE static inline
+#   define SK_TEXT(s) s
 #else
 #   error "Unknown Apple platform"
 #endif
-
-
-
