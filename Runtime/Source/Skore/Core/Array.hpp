@@ -32,6 +32,8 @@ namespace Skore
 
 		Array& operator=(const Array& other);
 		Array& operator=(Array&& other) noexcept;
+		bool operator==(const Array& other) const;
+		bool operator!=(const Array& other) const;
 		T& operator[](usize idx);
 		const T& operator[](usize idx) const;
 
@@ -171,6 +173,26 @@ namespace Skore
 	SK_FINLINE const T& Array<T>::operator[](usize idx) const
 	{
 		return m_first[idx];
+	}
+
+	template<typename T>
+	bool Array<T>::operator==(const Array& other) const
+	{
+		if (this->Size() != other.Size()) return false;
+		for (int i = 0; i < this->Size(); ++i)
+		{
+			if (this->operator[](i) != other[i])
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+
+	template<typename T>
+	bool Array<T>::operator!=(const Array& other) const
+	{
+		return !((*this) == other);
 	}
 
 	template<typename T>
