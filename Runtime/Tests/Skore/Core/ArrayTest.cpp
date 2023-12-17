@@ -6,7 +6,7 @@
 #include "Skore/Core/Array.hpp"
 
 
-namespace Skore
+namespace Skore::Tests
 {
 
 	TEST_CASE("Core::ArrayTestBasics")
@@ -29,10 +29,29 @@ namespace Skore
 		CHECK(arrInt[1] == 2);
 		CHECK(arrInt[2] == 3);
 
+		i32 i = 0;
+		for(const auto it: arrInt)
+		{
+			CHECK(it == ++i);
+		}
+
+		arrInt.PopBack();
+		CHECK(arrInt.Size() == 2);
+
 		arrInt.Clear();
 		CHECK(arrInt.Empty());
 		CHECK(arrInt.Size() == 0);
 		CHECK(arrInt.Capacity() == 10);
+	}
+
+	TEST_CASE("Core::ArrayTestResize")
+	{
+		Array<i32> arrInt{};
+		arrInt.Resize(10, 5);
+		for (int i = 0; i < 10; ++i)
+		{
+			CHECK(arrInt[i] == 5);
+		}
 	}
 
 	TEST_CASE("Core::ArrayTestInsertBegin")
@@ -90,7 +109,6 @@ namespace Skore
 		arrInt.EmplaceBack(2);
 		arrInt.EmplaceBack(3);
 
-
 		{
 			Array<i32> arrOther{};
 			arrOther.EmplaceBack(10);
@@ -106,5 +124,78 @@ namespace Skore
 		CHECK(arrInt[3] == 10);
 		CHECK(arrInt[4] == 20);
 	}
-}
 
+	TEST_CASE("Core::ArrayTestErase")
+	{
+		Array<i32> arrInt{};
+		arrInt.EmplaceBack(1);
+
+		arrInt.EmplaceBack(2);
+		arrInt.EmplaceBack(3);
+		arrInt.EmplaceBack(4);
+
+		arrInt.EmplaceBack(5);
+		arrInt.EmplaceBack(6);
+
+		arrInt.Erase(arrInt.begin() + 1, arrInt.begin() + 4);
+
+		CHECK(arrInt.Size() == 3);
+
+		CHECK(arrInt[0] == 1);
+		CHECK(arrInt[1] == 5);
+		CHECK(arrInt[2] == 6);
+	}
+
+	TEST_CASE("Core::ArrayTestCopy")
+	{
+		Array<i32> arrInt{};
+		arrInt.EmplaceBack(1);
+		arrInt.EmplaceBack(2);
+		arrInt.EmplaceBack(3);
+
+		Array<i32> copy{arrInt};
+
+		CHECK(copy[0] == 1);
+		CHECK(copy[1] == 2);
+		CHECK(copy[2] == 3);
+
+		Array<i32> assign = arrInt;
+		CHECK(assign[0] == 1);
+		CHECK(assign[1] == 2);
+		CHECK(assign[2] == 3);
+	}
+
+	TEST_CASE("Core::ArrayTestMove")
+	{
+		Array<i32> arrInt{};
+		arrInt.EmplaceBack(1);
+		arrInt.EmplaceBack(2);
+		arrInt.EmplaceBack(3);
+
+		Array<i32> move = Traits::Move(arrInt);
+
+		CHECK(move[0] == 1);
+		CHECK(move[1] == 2);
+		CHECK(move[2] == 3);
+
+		CHECK(arrInt.Empty());
+	}
+
+	Array<i32> GetArray()
+	{
+		Array<i32> arrInt{};
+		arrInt.EmplaceBack(1);
+		arrInt.EmplaceBack(2);
+		arrInt.EmplaceBack(3);
+		return arrInt;
+	}
+
+	TEST_CASE("Core::ArrayTestMoveFunc")
+	{
+		Array<i32> arr = GetArray();
+		CHECK(arr[0] == 1);
+		CHECK(arr[1] == 2);
+		CHECK(arr[2] == 3);
+		CHECK(!arr.Empty());
+	}
+}

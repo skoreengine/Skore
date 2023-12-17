@@ -47,3 +47,11 @@ typedef decltype(sizeof(0)) usize;
 #else
 #   error "Unknown Apple platform"
 #endif
+
+#ifdef NDEBUG
+#  define SK_ASSERT(condition, message) ((void)0)
+#else
+#  include <cassert>
+#  define SK_ASSERT(condition, message) assert(condition && message)
+#  define SK_DEBUG
+#endif

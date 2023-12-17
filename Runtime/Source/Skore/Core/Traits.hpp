@@ -41,6 +41,12 @@ namespace Skore::Traits
 	}
 
 	template<typename T>
+	constexpr RemoveReference<T>&& Move(T&& arg)
+	{
+		return static_cast<RemoveReference<T>&&>(arg);
+	}
+
+	template<typename T>
 	constexpr bool IsAggregate = __is_aggregate(T);
 
 }

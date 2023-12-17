@@ -19,17 +19,19 @@ namespace Skore
 
 
 		Array();
-//		Array(const Array& other);
-//		Array(Array&& other);
-//		Array(usize size);
-//		Array(usize size, const T& value);
-//		Array(const T* first, const T* last);
+		Array(const Array& other);
+		Array(Array&& other) noexcept;
+		Array(usize size);
+		Array(usize size, const T& value);
+		Array(const T* first, const T* last);
 
 		Iterator begin();
 		Iterator end();
 		ConstIterator begin() const;
 		ConstIterator end() const;
 
+		Array& operator=(const Array& other);
+		Array& operator=(Array&& other) noexcept;
 		T& operator[](usize idx);
 		const T& operator[](usize idx) const;
 
@@ -40,7 +42,7 @@ namespace Skore
 		bool Empty() const;
 
 
-		void Reserve(usize size);
+		void Reserve(usize newCapacity);
 		void Resize(usize size);
 		void Resize(usize size, const T& value);
 		void Clear();
@@ -49,10 +51,15 @@ namespace Skore
 
 		void Assign(const T* first, const T* last);
 		void Insert(Iterator where, const T* first, const T* last);
-		void Erase(Iterator where, Iterator last);
+		void Erase(Iterator first, Iterator last);
 
 		template<typename ...Args>
 		T& EmplaceBack(Args&&... args);
+
+
+		void ShrinkToFit();
+		void Swap(Array& other);
+
 
 		~Array();
 	private:
@@ -66,6 +73,44 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE Array<T>::Array() : m_first(0), m_last(0), m_capacity(0)
 	{
+	}
+
+	template<typename T>
+	SK_FINLINE Array<T>::Array(const Array& other) : m_first(0), m_last(0), m_capacity(0), m_allocator(other.m_allocator)
+	{
+		Reserve(other.Size());
+		Insert(begin(), other.begin(), other.m_last);
+	}
+
+	template<typename T>
+	SK_FINLINE Array<T>::Array(Array&& other) noexcept
+	{
+		m_first     = other.m_first;
+		m_last      = other.m_last;
+		m_capacity  = other.m_capacity;
+		m_allocator = other.m_allocator;
+
+		other.m_first    = nullptr;
+		other.m_last     = nullptr;
+		other.m_capacity = nullptr;
+	}
+
+	template<typename T>
+	SK_FINLINE Array<T>::Array(usize size) : m_first(0), m_last(0), m_capacity(0)
+	{
+		Resize(size);
+	}
+
+	template<typename T>
+	SK_FINLINE Array<T>::Array(usize size, const T& value) : m_first(0), m_last(0), m_capacity(0)
+	{
+		Resize(size, value);
+	}
+
+	template<typename T>
+	SK_FINLINE Array<T>::Array(const T* first, const T* last) : m_first(0), m_last(0), m_capacity(0)
+	{
+		Insert(begin(), first, last);
 	}
 
 	template<typename T>
@@ -90,6 +135,30 @@ namespace Skore
 	SK_FINLINE Array<T>::ConstIterator Array<T>::end() const
 	{
 		return m_last;
+	}
+
+	template<typename T>
+	Array<T>& Array<T>::operator=(const Array& other)
+	{
+		Array(other).Swap(*this);
+		return *this;
+	}
+
+	template<typename T>
+	Array<T>& Array<T>::operator=(Array&& other) noexcept
+	{
+		this->~Array();
+
+		m_first     = other.m_first;
+		m_last      = other.m_last;
+		m_capacity  = other.m_capacity;
+		m_allocator = other.m_allocator;
+
+		other.m_first    = nullptr;
+		other.m_last     = nullptr;
+		other.m_capacity = nullptr;
+
+		return *this;
 	}
 
 	template<typename T>
@@ -271,9 +340,36 @@ namespace Skore
 	}
 
 	template<typename T>
-	SK_FINLINE void Array<T>::Erase(Array::Iterator where, Array::Iterator last)
+	SK_FINLINE void Array<T>::Erase(Array::Iterator first, Array::Iterator last)
 	{
+		const usize count = (last - first);
 
+		for (T* it = first; it != last; ++it)
+		{
+			it->~T();
+		}
+
+		T* it  = last;
+		T* end = m_last;
+
+		for (T* dest = first; it != end; ++it, ++dest)
+		{
+			new(PlaceHolder(), dest) T(Traits::Forward<T>(*it));
+		}
+
+		m_last -= count;
+	}
+
+	template<typename T>
+	SK_FINLINE void Array<T>::ShrinkToFit()
+	{
+		SK_ASSERT(false, "NOT IMPLEMENTED");
+	}
+
+	template<typename T>
+	SK_FINLINE void Array<T>::Swap(Array& other)
+	{
+		SK_ASSERT(false, "NOT IMPLEMENTED");
 	}
 
 	template<typename T>
