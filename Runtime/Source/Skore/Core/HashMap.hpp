@@ -22,6 +22,11 @@ namespace Skore
 		typedef HashIterator<Node>       Iterator;
 		typedef HashIterator<const Node> ConstIterator;
 
+		Iterator begin();
+		Iterator end();
+		ConstIterator begin() const;
+		ConstIterator end() const;
+
 		void    Clear();
 		bool    Empty() const;
 		usize   Size() const;
@@ -42,19 +47,64 @@ namespace Skore
 	template<typename Key, typename Value>
 	SK_FINLINE void HashMap<Key, Value>::Clear()
 	{
+		if (m_buckets.Empty()) return;
 
+		Node* it = *m_buckets.begin();
+		while (it)
+		{
+			Node* next = it->next;
+			it->~HashNode<Key, Value>();
+			m_allocator->MemFree(m_allocator->alloc, it, sizeof(HashNode<Key, Value>));
+			it = next;
+		}
+
+		m_buckets.Clear();
+		m_buckets.ShrinkToFit();
+		m_size = 0;
+	}
+
+	template<typename Key, typename Value>
+	SK_FINLINE HashMap<Key, Value>::Iterator HashMap<Key, Value>::begin()
+	{
+		Iterator it;
+		it.node = !m_buckets.Empty() ? *m_buckets.begin() : nullptr;
+		return it;
+	}
+
+	template<typename Key, typename Value>
+	SK_FINLINE HashMap<Key, Value>::Iterator HashMap<Key, Value>::end()
+	{
+		Iterator it;
+		it.node = nullptr;
+		return it;
+	}
+
+	template<typename Key, typename Value>
+	SK_FINLINE HashMap<Key, Value>::ConstIterator HashMap<Key, Value>::begin() const
+	{
+		Iterator it;
+		it.node = !m_buckets.Empty() ? *m_buckets.begin() : nullptr;
+		return it;
+	}
+
+	template<typename Key, typename Value>
+	SK_FINLINE HashMap<Key, Value>::ConstIterator HashMap<Key, Value>::end() const
+	{
+		Iterator it;
+		it.node = nullptr;
+		return it;
 	}
 
 	template<typename Key, typename Value>
 	SK_FINLINE bool HashMap<Key, Value>::Empty() const
 	{
-		return false;
+		return m_size == 0;
 	}
 
 	template<typename Key, typename Value>
 	SK_FINLINE usize HashMap<Key, Value>::Size() const
 	{
-		return 0;
+		return m_size;
 	}
 
 	template<typename Key, typename Value>

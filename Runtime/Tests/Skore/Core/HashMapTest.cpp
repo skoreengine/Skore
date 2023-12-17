@@ -20,12 +20,24 @@ namespace Skore::Tests
 		for (int i = 0; i < 1000; ++i)
 		{
 			HashMap<int, int>::Iterator it = map.Find(i);
+			if (it == map.end())
+			{
+				REQUIRE(false);
+			}
+
 			if (it->second != i * 100)
 			{
 				check = false;
 			}
 		}
+
 		CHECK(check);
+
+		map.Clear();
+
+		HashMap<int, int>::Iterator it = map.Find(1);
+		REQUIRE(it == map.end());
+
 	}
 
 }

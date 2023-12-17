@@ -36,6 +36,24 @@ namespace Skore
 		return *node;
 	}
 
+	template<typename LNode, typename RNode>
+	static inline bool operator==(const HashIterator<LNode>& lhs, const HashIterator<RNode>& rhs)
+	{
+		return lhs.node == rhs.node;
+	}
+
+	template<typename LNode, typename RNode>
+	static inline bool operator!=(const HashIterator<LNode>& lhs, const HashIterator<RNode>& rhs)
+	{
+		return lhs.node != rhs.node;
+	}
+
+	template<typename Node>
+	static inline void operator++(HashIterator<Node>& lhs)
+	{
+		lhs.node = lhs.node->next;
+	}
+
 
 	template<typename Key, typename Value>
 	static inline void HashNodeInsert(HashNode<Key, Value>* node, usize hash, HashNode<Key, Value>** buckets, usize sizeBuckets)
