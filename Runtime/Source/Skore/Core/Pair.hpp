@@ -11,8 +11,8 @@ namespace Skore
 	template<typename Key, typename Value>
 	struct Pair
 	{
-		Key key{};
-		Value value{};
+		Key   first{};
+		Value second{};
 
 		Pair();
 		Pair(const Pair& other);
@@ -30,40 +30,40 @@ namespace Skore
 	}
 
 	template<typename Key, typename Value>
-	SK_FINLINE Pair<Key, Value>::Pair(const Pair& other) : key(other.key), value(other.value)
+	SK_FINLINE Pair<Key, Value>::Pair(const Pair& other) : first(other.first), second(other.second)
 	{
 
 	}
 
 	template<typename Key, typename Value>
-	SK_FINLINE Pair<Key, Value>::Pair(Pair&& other) : key(static_cast<Key&&>(other.key)), value(static_cast<Value&&>(other.value))
+	SK_FINLINE Pair<Key, Value>::Pair(Pair&& other) : first(static_cast<Key&&>(other.first)), second(static_cast<Value&&>(other.second))
 	{
 	}
 
 	template<typename Key, typename Value>
-	SK_FINLINE Pair<Key, Value>::Pair(const Key& key, const Value& value) : key(key), value(value)
+	SK_FINLINE Pair<Key, Value>::Pair(const Key& key, const Value& value) : first(key), second(value)
 	{
 
 	}
 
 	template<typename Key, typename Value>
-	SK_FINLINE Pair<Key, Value>::Pair(Key&& key, Value&& value) : key(static_cast<Key&&>(key)), value(static_cast<Value&&>(value))
+	SK_FINLINE Pair<Key, Value>::Pair(Key&& key, Value&& value) : first(static_cast<Key&&>(key)), second(static_cast<Value&&>(value))
 	{
 	}
 
 	template<typename Key, typename Value>
 	SK_FINLINE Pair<Key, Value>& Pair<Key, Value>::operator=(const Pair& other)
 	{
-		key   = other.key;
-		value = other.value;
+		first  = other.first;
+		second = other.second;
 		return *this;
 	}
 
 	template<typename Key, typename Value>
 	SK_FINLINE Pair<Key, Value>& Pair<Key, Value>::operator=(Pair&& other) noexcept
 	{
-		key   = static_cast<Key&&>(other.key);
-		value = static_cast<Value&&>(other.value);
+		first  = static_cast<Key&&>(other.first);
+		second = static_cast<Value&&>(other.second);
 		return *this;
 	}
 

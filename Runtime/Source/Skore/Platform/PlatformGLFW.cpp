@@ -10,6 +10,13 @@
 
 namespace Skore
 {
+	namespace Platform
+	{
+		void InitStyle();
+		void ApplyDarkStyle(CPtr internal);
+	}
+
+
 	struct Window
 	{
 		GLFWwindow* handler{};
@@ -19,6 +26,8 @@ namespace Skore
 	{
 		glfwInit();
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+
+		InitStyle();
 	}
 
 	void Platform::Shutdown()
@@ -44,7 +53,9 @@ namespace Skore
 
 		window->handler = glfwCreateWindow(size.width, size.height, windowCreation.title.CStr(), nullptr, nullptr);
 
+		ApplyDarkStyle(window->handler);
 		glfwShowWindow(window->handler);
+
 
 		return window;
 	}

@@ -18,12 +18,12 @@ namespace Skore
 	{
 		Platform::Init();
 
-		WindowCreation windowCreation {
+		WindowCreation windowCreation{
 			.title = "Skore",
 			.windowFlags = WindowFlags_Maximized
 		};
 
-		app.window = Platform::CreateWindow(windowCreation);
+		app.window  = Platform::CreateWindow(windowCreation);
 		app.running = true;
 	}
 

@@ -9,5 +9,23 @@ namespace Skore::Tests
 	TEST_CASE("Core::HashMapTestBasics")
 	{
 		HashMap<int, int> map{};
+
+		for (int i = 0; i < 1000; ++i)
+		{
+			map.Insert(MakePair(i,i * 100));
+		}
+
+		bool check = true;
+
+		for (int i = 0; i < 1000; ++i)
+		{
+			HashMap<int, int>::Iterator it = map.Find(i);
+			if (it->second != i * 100)
+			{
+				check = false;
+			}
+		}
+		CHECK(check);
 	}
+
 }
