@@ -80,7 +80,10 @@ namespace Skore
 		void Swap(BasicString& other);
 
 		template<typename Type>
-		BasicString& Append(const Type& value);
+		BasicString<T>& Append(const Type& value)
+		{
+			return *this;
+		}
 
 	private:
 		static constexpr usize c_longFlag = ((usize) 1) << (sizeof(usize) * 8 - 1);

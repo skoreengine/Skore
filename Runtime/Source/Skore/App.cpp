@@ -3,8 +3,9 @@
 
 #include "App.hpp"
 #include "Skore/Platform/Platform.hpp"
-#include <iostream>
+//#include <iostream>
 #include "Skore/Core/String.hpp"
+#include "Skore/Core/Array.hpp"
 
 namespace Skore
 {
@@ -18,11 +19,20 @@ namespace Skore
 	void App::Init()
 	{
 		String myString = {TEXT("blah")};
+		myString.Append(TEXT("ab"));
+
+		Array<String> arrString{};
+		arrString.Resize(50);
+		arrString.Clear();
+
+		arrString.EmplaceBack(String{});
+
+
 
 		Platform::Init();
 
 		appContext.running = false;
-		std::cout << "Hello, Skore!" << std::endl;
+//		std::cout << "Hello, Skore!" << std::endl;
 	}
 
 	bool App::Update()
@@ -32,7 +42,7 @@ namespace Skore
 
 	void App::Shutdown()
 	{
-		std::cout << "Shutdown, Skore!" << std::endl;
+		//std::cout << "Shutdown, Skore!" << std::endl;
 		appContext = {};
 	}
 }
