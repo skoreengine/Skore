@@ -27,6 +27,7 @@ typedef decltype(sizeof(0)) usize;
 #if _WIN64
 #   define SK_API __declspec(dllexport)
 #   define SK_WIN  1
+#   define SK_DESKTOP  1
 #   define SK_PATH_SEPARATOR '\\'
 #   define SK_SHARED_EXT ".dll"
 #   define SK_FINLINE __forceinline

@@ -3,14 +3,16 @@
 
 #pragma once
 
+#include "Skore/Defines.hpp"
+
 namespace Skore
 {
-	constexpr float PI       = 3.14159265358f;
-	constexpr float RadToDeg = 180.0f / PI;
-	constexpr float DegToRad = PI / 180.0f;
-	constexpr float OneDivPI = 1.0f / PI;
-	constexpr float PIDiv2   = PI / 2.0f;
-	constexpr float TwoPI    = PI * 2.0f;
-	constexpr float Sqrt2    = 1.414213562f;
-	constexpr float Epsilon  = 0.0001f;
+	constexpr f32 PI       = 3.14159265358f;
+	constexpr f32 RadToDeg = 180.0f / PI;
+	constexpr f32 DegToRad = PI / 180.0f;
+	constexpr f32 OneDivPI = 1.0f / PI;
+	constexpr f32 PIDiv2   = PI / 2.0f;
+	constexpr f32 TwoPI    = PI * 2.0f;
+	constexpr f32 Sqrt2    = 1.414213562f;
+	constexpr f32 Epsilon  = 0.0001f;
 }

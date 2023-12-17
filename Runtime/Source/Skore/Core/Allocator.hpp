@@ -4,6 +4,8 @@
 #pragma once
 
 #include "Skore/Defines.hpp"
+#include "Traits.hpp"
+#include "New.hpp"
 
 namespace Skore
 {
@@ -15,5 +17,27 @@ namespace Skore
 	};
 
 	SK_API Allocator* GetDefaultAllocator();
+
+	template<typename Type, typename ...Args>
+	static Type* Alloc(Args&& ...args)
+	{
+		auto ptr = static_cast<Type*>(GetDefaultAllocator()->MemAlloc(GetDefaultAllocator()->alloc, sizeof(Type)));
+		if constexpr (Traits::IsAggregate<Type>)
+		{
+			new(PlaceHolder(), ptr) Type{Traits::Forward<Args>(args)...};
+		}
+		else
+		{
+			new(PlaceHolder(), ptr) Type(Traits::Forward<Args>(args)...);
+		}
+		return ptr;
+	}
+
+	template<typename Type>
+	static void Destroy(Type * type)
+	{
+		type->~Type();
+		GetDefaultAllocator()->MemFree(GetDefaultAllocator()->alloc, type, sizeof(Type));
+	}
 
 }

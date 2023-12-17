@@ -3,34 +3,46 @@
 
 #include "App.hpp"
 #include "Skore/Platform/Platform.hpp"
-#include <iostream>
 
 namespace Skore
 {
 	struct AppContext
 	{
 		bool running = false;
+		Window* window = nullptr;
 	};
 
-	AppContext appContext = {};
+	AppContext app = {};
 
 	void App::Init()
 	{
 		Platform::Init();
 
-		appContext.running = false;
-//		std::cout << "Hello, Skore!" << std::endl;
+		WindowCreation windowCreation {
+			.title = "Skore",
+			.windowFlags = WindowFlags_Maximized
+		};
+
+		app.window = Platform::CreateWindow(windowCreation);
+		app.running = true;
 	}
 
 	bool App::Update()
 	{
-		return appContext.running;
+		Platform::ProcessEvents();
+
+		if (Platform::WindowUserRequestedClose(app.window))
+		{
+			app.running = false;
+		}
+
+		return app.running;
 	}
 
 	void App::Shutdown()
 	{
-		//std::cout << "Shutdown, Skore!" << std::endl;
-		appContext = {};
+		Platform::Shutdown();
+		app = {};
 	}
 }
 
