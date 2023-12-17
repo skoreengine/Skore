@@ -202,6 +202,7 @@ namespace Skore
 	SK_FINLINE BasicString<T>& BasicString<T>::operator=(BasicString&& other) noexcept
 	{
 		m_size = other.m_size;
+
 		if (other.m_size & c_longFlag)
 		{
 			m_capacity = other.m_capacity;
@@ -828,10 +829,6 @@ namespace Skore
 		lhs.Append(rhs);
 	}
 
-#ifdef SK_WIN
-	using String = BasicString<wchar_t>;
-#else
 	using String = BasicString<char>;
-#endif
 
 }

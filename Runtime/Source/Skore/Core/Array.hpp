@@ -14,6 +14,10 @@ namespace Skore
 	class Array
 	{
 	public:
+		typedef T      * Iterator;
+		typedef const T* ConstIterator;
+
+
 		Array();
 //		Array(const Array& other);
 //		Array(Array&& other);
@@ -21,11 +25,19 @@ namespace Skore
 //		Array(usize size, const T& value);
 //		Array(const T* first, const T* last);
 
+		Iterator begin();
+		Iterator end();
+		ConstIterator begin() const;
+		ConstIterator end() const;
+
 
 		void Reserve(usize size);
 		void Resize(usize size);
 		void Resize(usize size, const T& value);
 		void Clear();
+		void PopBack();
+
+		void Insert(Iterator where, const T* first, const T* last);
 
 		template<typename ...Args>
 		T& EmplaceBack(Args&&... args);
@@ -40,8 +52,32 @@ namespace Skore
 	};
 
 	template<typename T>
-	Array<T>::Array() : m_first(0), m_last(0), m_capacity(0)
+	SK_FINLINE Array<T>::Array() : m_first(0), m_last(0), m_capacity(0)
 	{
+	}
+
+	template<typename T>
+	SK_FINLINE Array<T>::Iterator Array<T>::begin()
+	{
+		return m_first;
+	}
+
+	template<typename T>
+	SK_FINLINE Array<T>::Iterator Array<T>::end()
+	{
+		return m_last;
+	}
+
+	template<typename T>
+	SK_FINLINE Array<T>::ConstIterator Array<T>::begin() const
+	{
+		return m_first;
+	}
+
+	template<typename T>
+	SK_FINLINE Array<T>::ConstIterator Array<T>::end() const
+	{
+		return m_last;
 	}
 
 	template<typename T>
@@ -53,12 +89,12 @@ namespace Skore
 		}
 
 		const usize size = m_last - m_first;
-
 		T* newFirst = (T*) m_allocator->MemAlloc(m_allocator->alloc, sizeof(T) * newCapacity);
+		T* dest = newFirst;
 
-		for (T* it = m_first; it != m_last; ++it, ++newFirst)
+		for (T* it = m_first; it != m_last; ++it, ++dest)
 		{
-			new(PlaceHolder(), newFirst) T(Traits::Forward<T>(*it));
+			new(PlaceHolder(), dest) T(Traits::Forward<T>(*it));
 			it->~T();
 		}
 
@@ -109,21 +145,25 @@ namespace Skore
 	template<typename... Args>
 	SK_FINLINE T& Array<T>::EmplaceBack(Args&& ... args)
 	{
-		if (m_first + 1 > m_capacity)
+		T* where = m_last;
+
+		if (m_last == m_capacity)
 		{
-			Reserve(((m_last - m_first) * 3 / 2));
+			Reserve(((m_last - m_first) * 3 / 2) + 1);
+			where = m_first + (m_last - m_first);
 		}
-		m_last = m_first + 1;
+
+		m_last++;
 
 		if constexpr (Traits::IsAggregate<T>)
 		{
-			new(PlaceHolder(), m_last) T{Traits::Forward<Args>(args)...};
+			new(PlaceHolder(), where) T{Traits::Forward<Args>(args)...};
 		}
 		else
 		{
-			new(PlaceHolder(), m_last) T(Traits::Forward<Args>(args)...);
+			new(PlaceHolder(), where) T(Traits::Forward<Args>(args)...);
 		}
-		return *m_last;
+		return *where;
 	}
 
 	template<typename T>
@@ -134,6 +174,29 @@ namespace Skore
 			it->~T();
 		}
 		m_last = m_first;
+	}
+
+	template<typename T>
+	SK_FINLINE void Array<T>::PopBack()
+	{
+		T* where = m_last - 1;
+		where->~T();
+		--m_last;
+	}
+
+	template<typename T>
+	SK_FINLINE void Array<T>::Insert(Array::Iterator where, const T* first, const T* last)
+	{
+		const usize count = last - first;
+		const usize newSize = ((m_last - m_first) + count);
+		if (m_first + newSize >= m_capacity)
+		{
+			Reserve((newSize * 3) / 2);
+		}
+
+
+
+
 	}
 
 	template<typename T>

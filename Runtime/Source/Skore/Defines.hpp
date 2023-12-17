@@ -30,7 +30,6 @@ typedef decltype(sizeof(0)) usize;
 #   define SK_PATH_SEPARATOR '\\'
 #   define SK_SHARED_EXT ".dll"
 #   define SK_FINLINE __forceinline
-#   define TEXT(s) L##s
 #elif __linux__
 #   define SK_API   __attribute__ ((visibility ("default")))
 #   define SK_PATH_SEPARATOR '/'
@@ -45,7 +44,6 @@ typedef decltype(sizeof(0)) usize;
 #   define SK_UNIX
 #   define SK_SHARED_EXT ".dylib"
 #   define SK_FINLINE static inline
-#   define SK_TEXT(s) s
 #else
 #   error "Unknown Apple platform"
 #endif
