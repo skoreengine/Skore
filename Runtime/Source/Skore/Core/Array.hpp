@@ -221,7 +221,7 @@ namespace Skore
 			it->~T();
 		}
 
-		m_allocator->MemFree(m_allocator->alloc, m_first, (usize) ((char*) m_capacity - (char*) m_first));
+		m_allocator->MemFree(m_allocator->alloc, m_first, sizeof(T) * ((char*) m_capacity - (char*) m_first));
 
 		m_first    = newFirst;
 		m_last     = newFirst + size;
@@ -363,13 +363,51 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE void Array<T>::ShrinkToFit()
 	{
-		SK_ASSERT(false, "NOT IMPLEMENTED");
+		if (m_capacity != m_last)
+		{
+			if (m_last == m_first)
+			{
+				m_allocator->MemFree(m_allocator->alloc, m_first, sizeof(T) * ((char*) m_capacity - (char*) m_first));
+				m_capacity = m_first = m_last = nullptr;
+			}
+			else
+			{
+				const usize size = m_last - m_first;
+				T* newFirst = (T*) m_allocator->MemAlloc(m_allocator->alloc, sizeof(T) * size);
+				T* dest     = newFirst;
+
+				for (T* it = m_first; it != m_last; ++it, ++dest)
+				{
+					new(PlaceHolder(), dest) T(Traits::Forward<T>(*it));
+					it->~T();
+				}
+
+				m_allocator->MemFree(m_allocator->alloc, m_first, sizeof(T) * ((char*) m_capacity - (char*) m_first));
+				m_first    = newFirst;
+				m_last     = newFirst + size;
+				m_capacity = m_last;
+			}
+		}
 	}
 
 	template<typename T>
 	SK_FINLINE void Array<T>::Swap(Array& other)
 	{
-		SK_ASSERT(false, "NOT IMPLEMENTED");
+		T* first    = m_first;
+		T* last     = m_last;
+		T* capacity = m_capacity;
+
+		Allocator* allocator = m_allocator;
+
+		m_first     = other.m_first;
+		m_last      = other.m_last;
+		m_capacity  = other.m_capacity;
+		m_allocator = other.m_allocator;
+
+		other.m_first    = first;
+		other.m_last     = last;
+		other.m_capacity = capacity;
+		other.m_allocator = allocator;
 	}
 
 	template<typename T>
@@ -381,7 +419,7 @@ namespace Skore
 			{
 				it->~T();
 			}
-			m_allocator->MemFree(m_allocator->alloc, m_first, (usize) ((char*) m_capacity - (char*) m_first));
+			m_allocator->MemFree(m_allocator->alloc, m_first, sizeof(T) * ((char*) m_capacity - (char*) m_first));
 		}
 	}
 

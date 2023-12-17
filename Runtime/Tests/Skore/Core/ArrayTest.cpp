@@ -198,4 +198,47 @@ namespace Skore::Tests
 		CHECK(arr[2] == 3);
 		CHECK(!arr.Empty());
 	}
+
+	TEST_CASE("Core::ArrayTestSwap")
+	{
+		Array<i32> arr1{};
+		arr1.EmplaceBack(1);
+		arr1.EmplaceBack(2);
+
+		Array<i32> arr2{};
+		arr2.EmplaceBack(3);
+		arr2.EmplaceBack(4);
+
+		arr2.Swap(arr1);
+
+		CHECK(arr2[0] == 1);
+		CHECK(arr2[1] == 2);
+
+		CHECK(arr1[0] == 3);
+		CHECK(arr1[1] == 4);
+	}
+
+	TEST_CASE("Core::ArrayTestShrinkToFit")
+	{
+		{
+			Array<i32> arr1{};
+			arr1.Reserve(10);
+
+			CHECK(arr1.Capacity() == 10);
+			arr1.ShrinkToFit();
+			CHECK(arr1.Capacity() == 0);
+		}
+
+		{
+			Array<i32> arr1{};
+			arr1.Reserve(10);
+			arr1.EmplaceBack(1);
+			arr1.EmplaceBack(2);
+
+			CHECK(arr1.Capacity() == 10);
+			arr1.ShrinkToFit();
+			CHECK(arr1.Capacity() == 2);
+		}
+
+	}
 }
