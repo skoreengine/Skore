@@ -30,6 +30,15 @@ namespace Skore
 		ConstIterator begin() const;
 		ConstIterator end() const;
 
+		T& operator[](usize idx);
+		const T& operator[](usize idx) const;
+
+		const T* Data() const;
+		T* Data();
+		usize Size() const;
+		usize Capacity() const;
+		bool Empty() const;
+
 
 		void Reserve(usize size);
 		void Resize(usize size);
@@ -37,7 +46,10 @@ namespace Skore
 		void Clear();
 		void PopBack();
 
+
+		void Assign(const T* first, const T* last);
 		void Insert(Iterator where, const T* first, const T* last);
+		void Erase(Iterator where, Iterator last);
 
 		template<typename ...Args>
 		T& EmplaceBack(Args&&... args);
@@ -78,6 +90,48 @@ namespace Skore
 	SK_FINLINE Array<T>::ConstIterator Array<T>::end() const
 	{
 		return m_last;
+	}
+
+	template<typename T>
+	SK_FINLINE T& Array<T>::operator[](usize idx)
+	{
+		return m_first[idx];
+	}
+
+	template<typename T>
+	SK_FINLINE const T& Array<T>::operator[](usize idx) const
+	{
+		return m_first[idx];
+	}
+
+	template<typename T>
+	SK_FINLINE const T* Array<T>::Data() const
+	{
+		return m_first;
+	}
+
+	template<typename T>
+	SK_FINLINE T* Array<T>::Data()
+	{
+		return m_first;
+	}
+
+	template<typename T>
+	SK_FINLINE usize Array<T>::Size() const
+	{
+		return m_last - m_first;
+	}
+
+	template<typename T>
+	SK_FINLINE usize Array<T>::Capacity() const
+	{
+		return m_capacity - m_first;
+	}
+
+	template<typename T>
+	SK_FINLINE bool Array<T>::Empty() const
+	{
+		return m_last == m_first;
 	}
 
 	template<typename T>
@@ -187,15 +241,38 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE void Array<T>::Insert(Array::Iterator where, const T* first, const T* last)
 	{
+		const usize offset = where - m_first;
 		const usize count = last - first;
 		const usize newSize = ((m_last - m_first) + count);
 		if (m_first + newSize >= m_capacity)
 		{
 			Reserve((newSize * 3) / 2);
+			where = m_first + offset;
 		}
 
+		for(T* it = where; it < where + count ; ++it)
+		{
+			new(PlaceHolder(), it + count) T(Traits::Forward<T>(*it));
+		}
 
+		for (; first != last; ++first, ++where)
+		{
+			new(PlaceHolder(), where) T(*first);
+		}
 
+		m_last = m_first + newSize;
+	}
+
+	template<typename T>
+	void Array<T>::Assign(const T* first, const T* last)
+	{
+		Clear();
+		Insert(m_last, first, last);
+	}
+
+	template<typename T>
+	SK_FINLINE void Array<T>::Erase(Array::Iterator where, Array::Iterator last)
+	{
 
 	}
 
