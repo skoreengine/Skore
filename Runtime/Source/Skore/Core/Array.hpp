@@ -250,16 +250,16 @@ namespace Skore
 			where = m_first + offset;
 		}
 
-		for(T* it = where; it < where + count ; ++it)
+		T* dest = m_first + newSize - 1;
+		for (T* it = m_last - 1; it >= where; --it, --dest)
 		{
-			new(PlaceHolder(), it + count) T(Traits::Forward<T>(*it));
+			new(PlaceHolder(), dest) T(Traits::Forward<T>(*it));
 		}
 
 		for (; first != last; ++first, ++where)
 		{
 			new(PlaceHolder(), where) T(*first);
 		}
-
 		m_last = m_first + newSize;
 	}
 
