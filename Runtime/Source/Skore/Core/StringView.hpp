@@ -22,7 +22,7 @@ namespace Skore
 		typedef ConstPointer Iterator;
 		typedef ConstPointer ConstIterator;
 
-		static constexpr usize npos = usize(-1);
+		static constexpr usize s_npos = -1;
 
 		constexpr BasicStringView();
 		constexpr BasicStringView(const Type* s, usize count);
@@ -39,29 +39,27 @@ namespace Skore
 		constexpr char operator[](usize pos) const;
 
 		constexpr usize Size() const;
-
 		constexpr bool Empty() const;
 
 		constexpr Iterator begin() const;
-
 		constexpr ConstIterator cbegin() const;
-
 		constexpr Iterator end() const;
-
 		constexpr ConstIterator cend() const;
 
-		constexpr BasicStringView Substr(usize pos = 0, usize count = npos) const;
-
+		constexpr BasicStringView Substr(usize pos = 0, usize count = s_npos) const;
 		constexpr void Swap(BasicStringView& v);
-
 		constexpr i32 Compare(const BasicStringView& other) const;
-
 		constexpr i32 Compare(ConstPointer sz) const;
-
 		static constexpr usize Strlen(const Type*);
+
+		constexpr usize FindFirstOf(const Type* s, usize pos = 0) const;
+		constexpr usize FindFirstOf(const Type* s, usize pos, usize n) const;
+
 
 	private:
 		BasicStringView(decltype(nullptr)) = delete;
+
+		constexpr bool IsContained(Type ch, ConstIterator first, ConstIterator last) const;
 
 		const Type* m_Str;
 		usize m_Size;
@@ -149,7 +147,7 @@ namespace Skore
 	template<typename Type>
 	constexpr BasicStringView<Type> BasicStringView<Type>::Substr(usize pos, usize count) const
 	{
-		return BasicStringView(m_Str + pos, npos == count ? m_Size - pos : count);
+		return BasicStringView(m_Str + pos, s_npos == count ? m_Size - pos : count);
 	}
 
 	template<typename Type>
@@ -205,6 +203,39 @@ namespace Skore
 		if (!it) return -1;
 		for (; *it && *sz && (*it == *sz); ++it, ++sz);
 		return *it - *sz;
+	}
+
+	template<typename Type>
+	constexpr usize BasicStringView<Type>::FindFirstOf(const Type* s, usize pos) const
+	{
+		return FindFirstOf(s, pos, Strlen(s));
+	}
+
+
+	template<typename Type>
+	constexpr usize BasicStringView<Type>::FindFirstOf(const Type* s, usize pos, usize n) const
+	{
+		for (usize i = pos; i != Size(); ++i)
+		{
+			if (IsContained((*this)[i], s, s + n))
+			{
+				return i;
+			}
+		}
+		return s_npos;
+	}
+
+	template<typename Type>
+	constexpr bool BasicStringView<Type>::IsContained(Type ch, BasicStringView::ConstIterator first, BasicStringView::ConstIterator last) const
+	{
+		for (auto cit = first; cit != last; ++cit)
+		{
+			if (*cit == ch)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	template<typename Type>

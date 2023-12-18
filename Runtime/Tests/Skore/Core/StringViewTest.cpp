@@ -9,7 +9,12 @@ namespace Skore::Tests
 {
 	TEST_CASE("Core::StringViewBasis")
 	{
-		StringView stringView = {"aaaa"};
+		StringView stringView = {"abcdce"};
 		CHECK(!stringView.Empty());
+
+
+		usize pos = stringView.FindFirstOf("c");
+		CHECK(pos == 2);
+
 	}
 }
