@@ -24,6 +24,21 @@ namespace Skore
 		Node* node{};
 	};
 
+
+	template<typename Node>
+	struct HashIterator<const Node>
+	{
+		HashIterator() = default;
+
+		HashIterator(HashIterator<Node> other) : node(other.node)
+		{
+		}
+
+		Node* operator->() const;
+		Node& operator*() const;
+		Node* node{};
+	};
+
 	template<typename Node>
 	inline Node* HashIterator<Node>::operator->() const
 	{
@@ -34,6 +49,23 @@ namespace Skore
 	inline Node& HashIterator<Node>::operator*() const
 	{
 		return *node;
+	}
+	template<typename Node>
+	inline Node* HashIterator<const Node>::operator->() const
+	{
+		return node;
+	}
+
+	template<typename Node>
+	inline Node& HashIterator<const Node>::operator*() const
+	{
+		return *node;
+	}
+
+	template<typename Node>
+	static inline void operator++(HashIterator<Node>& lhs)
+	{
+		lhs.node = lhs.node->next;
 	}
 
 	template<typename LNode, typename RNode>
@@ -48,10 +80,29 @@ namespace Skore
 		return lhs.node != rhs.node;
 	}
 
-	template<typename Node>
-	static inline void operator++(HashIterator<Node>& lhs)
+	template<typename Key, typename Value>
+	static inline void HashNodeErase(const HashNode<Key, Value>* where, usize hash, HashNode<Key, Value>** buckets, usize sizeBuckets)
 	{
-		lhs.node = lhs.node->next;
+		usize bucket = hash & (sizeBuckets - 1);
+		HashNode<Key, Value>* next = where->next;
+		for (; buckets[bucket] == where; --bucket)
+		{
+			buckets[bucket] = next;
+			if (!bucket)
+			{
+				break;
+			}
+		}
+
+		if (where->prev)
+		{
+			where->prev->next = where->next;
+		}
+
+		if (next)
+		{
+			next->prev = where->prev;
+		}
 	}
 
 

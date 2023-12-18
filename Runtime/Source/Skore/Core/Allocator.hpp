@@ -17,6 +17,7 @@ namespace Skore
 	};
 
 	SK_API Allocator* GetDefaultAllocator();
+	SK_API void SetDefaultAllocator(const Allocator& allocator);
 
 	template<typename Type, typename ...Args>
 	static Type* Alloc(Args&& ...args)

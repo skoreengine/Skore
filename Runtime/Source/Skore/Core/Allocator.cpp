@@ -27,4 +27,9 @@ namespace Skore
 	{
 		return &allocator;
 	}
+
+	void SetDefaultAllocator(const Allocator& pAllocator)
+	{
+		allocator = pAllocator;
+	}
 }
