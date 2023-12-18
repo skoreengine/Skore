@@ -84,4 +84,7 @@ namespace Skore::Traits
 
 	typedef decltype(__nullptr) NullPtr;
 
+
+	template<typename T>
+	constexpr bool AlwaysFalse = false;
 }

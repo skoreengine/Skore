@@ -12,9 +12,10 @@ namespace Skore::Tests
 		StringView stringView = {"abcdce"};
 		CHECK(!stringView.Empty());
 
-
-		usize pos = stringView.FindFirstOf("c");
-		CHECK(pos == 2);
-
+		CHECK(stringView.FindFirstOf("c") == 2);
+		CHECK(stringView.FindFirstOf('c') == 2);
+		CHECK(stringView.FindFirstNotOf("a") == 1);
+		CHECK(stringView.FindLastOf("c") == 4);
+		CHECK(stringView.FindLastNotOf("e") == 4);
 	}
 }

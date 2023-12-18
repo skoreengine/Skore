@@ -51,15 +51,15 @@ typedef decltype(sizeof(0)) usize;
 #endif
 
 #ifndef SK_PRETTY_FUNCTION
-#   if defined _MSC_VER
-#      define SK_PRETTY_FUNCTION __FUNCSIG__
-#   else
-#       if defined __GNUC__
-#           define SK_PRETTY_FUNCTION __PRETTY_FUNCTION__
-#       else
-static_assert(false, "OS still not supported");
-#       endif
-#   endif
+#if defined _MSC_VER
+#   define SK_PRETTY_FUNCTION __FUNCSIG__
+#   define SK_PRETTY_FUNCTION_PREFIX '<'
+#   define SK_PRETTY_FUNCTION_SUFFIX '>'
+#elif defined __clang__ || defined __GNUC__
+#   define SK_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#   define SK_PRETTY_FUNCTION_PREFIX '='
+#   define SK_PRETTY_FUNCTION_SUFFIX ']'
+#endif
 #endif
 
 #ifdef NDEBUG
