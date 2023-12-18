@@ -54,4 +54,20 @@ namespace Skore
 	IMPL_HASH_32(ul32);
 	IMPL_HASH_32(bool);
 
+
+	template<>
+	struct Hash<char>
+	{
+		constexpr static bool HasHash = true;
+		constexpr static usize Value(const char* ch)
+		{
+			usize hash = 0;
+			for (const char* c = ch; *c != '\0'; ++c)
+			{
+				hash = *ch + (hash << 6) + (hash << 16) - hash;
+			}
+			return hash;
+		}
+	};
+
 }

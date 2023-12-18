@@ -27,6 +27,39 @@ namespace Skore::Traits
 	template<typename T>
 	using RemoveReference = typename TRemoveReference<T>::type;
 
+	template<typename Type>
+	struct TRemoveAll
+	{
+		using type = Type;
+	};
+
+	template<typename Type>
+	struct TRemoveAll<const Type>
+	{
+		using type = typename TRemoveAll<Type>::type;
+	};
+
+	template<typename Type>
+	struct TRemoveAll<Type*>
+	{
+		using type = typename TRemoveAll<Type>::type;
+	};
+
+	template<typename Type>
+	struct TRemoveAll<Type&>
+	{
+		using type = typename TRemoveAll<Type>::type;
+	};
+
+	template<typename Type>
+	struct TRemoveAll<Type&&>
+	{
+		using type = typename TRemoveAll<Type>::type;
+	};
+
+	template<typename Type>
+	using RemoveAll = typename TRemoveAll<Type>::type;
+
 
 	template<typename T>
 	constexpr T&& Forward(RemoveReference<T>& arg)
@@ -48,5 +81,7 @@ namespace Skore::Traits
 
 	template<typename T>
 	constexpr bool IsAggregate = __is_aggregate(T);
+
+	typedef decltype(__nullptr) NullPtr;
 
 }

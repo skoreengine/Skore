@@ -19,6 +19,7 @@ typedef double f64;
 
 typedef void      * CPtr;
 typedef const void* ConstCPtr;
+typedef u64 TypeID;
 
 typedef decltype(sizeof(0)) usize;
 
@@ -47,6 +48,18 @@ typedef decltype(sizeof(0)) usize;
 #   define SK_FINLINE static inline
 #else
 #   error "Unknown Apple platform"
+#endif
+
+#ifndef SK_PRETTY_FUNCTION
+#   if defined _MSC_VER
+#      define SK_PRETTY_FUNCTION __FUNCSIG__
+#   else
+#       if defined __GNUC__
+#           define SK_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#       else
+static_assert(false, "OS still not supported");
+#       endif
+#   endif
 #endif
 
 #ifdef NDEBUG
