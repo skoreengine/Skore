@@ -42,10 +42,20 @@ namespace Skore
 		ConstIterator Find(const ParamKey& key) const;
 
 		void Erase(ConstIterator where);
+		void Erase(Iterator where);
+
+		template<typename ParamKey>
+		void Erase(const ParamKey& key);
 
 		Value& operator[](const Key& key);
 
 		Pair<Iterator, bool> Insert(const Pair<Key, Value>& p);
+		Pair<Iterator, bool> Insert(const Key key, const Value& value);
+
+		Pair<Iterator, bool> Emplace(const Key& key, Value&& value);
+
+		template<typename ParamKey>
+		bool Has(const ParamKey& key) const;
 
 		~HashMap();
 
@@ -56,8 +66,6 @@ namespace Skore
 		Array<Node*> m_buckets{};
 		Allocator* m_allocator = GetDefaultAllocator();
 	};
-
-
 
 	template<typename Key, typename Value>
 	SK_FINLINE HashMap<Key, Value>::HashMap()
@@ -220,12 +228,68 @@ namespace Skore
 	}
 
 	template<typename Key, typename Value>
+	SK_FINLINE Pair<typename HashMap<Key, Value>::Iterator, bool> HashMap<Key, Value>::Insert(const Key key, const Value& value)
+	{
+		return Insert(Pair<Key, Value>(key, value));
+	}
+
+	template<typename Key, typename Value>
+	SK_FINLINE Pair<typename HashMap<Key, Value>::Iterator, bool> HashMap<Key, Value>::Emplace(const Key& key, Value&& value)
+	{
+		Pair<Iterator, bool> result{};
+		result.second = false;
+		result.first  = Find(key);
+		if (result.first.node != nullptr)
+		{
+			return result;
+		}
+
+		Node* newNode = new(PlaceHolder(), m_allocator->MemAlloc(m_allocator->alloc, sizeof(Node))) Node{key, Traits::Forward<Value>(value)};
+		newNode->next = newNode->prev = nullptr;
+
+		if (m_buckets.Empty())
+		{
+			m_buckets.Resize(9);
+		}
+
+		HashNodeInsert(newNode, Hash<Key>::Value(key), m_buckets.Data(), m_buckets.Size() - 1);
+
+		++m_size;
+
+		ReHash();
+
+		result.first.node = newNode;
+		result.second = true;
+		return result;
+	}
+
+	template<typename Key, typename Value>
 	SK_FINLINE void HashMap<Key, Value>::Erase(ConstIterator where)
 	{
 		HashNodeErase(where.node, Hash<Key>::Value(where->first), m_buckets.Data(), m_buckets.Size() - 1);
 		where->~HashNode();
 		m_allocator->MemFree(m_allocator->alloc, where.node, sizeof(HashNode<Key, Value>));
 		--m_size;
+	}
+
+	template<typename Key, typename Value>
+	SK_FINLINE void HashMap<Key, Value>::Erase(Iterator where)
+	{
+		HashNodeErase(where.node, Hash<Key>::Value(where->first), m_buckets.Data(), m_buckets.Size() - 1);
+		where->~HashNode();
+		m_allocator->MemFree(m_allocator->alloc, where.node, sizeof(HashNode<Key, Value>));
+		--m_size;
+	}
+
+	template<typename Key, typename Value>
+	template<typename ParamKey>
+	void HashMap<Key, Value>::Erase(const ParamKey& key)
+	{
+		Iterator it = Find(key);
+		if (it)
+		{
+			Erase(it);
+		}
 	}
 
 	template<typename Key, typename Value>
@@ -247,6 +311,23 @@ namespace Skore
 				root = next;
 			}
 		}
+	}
+
+	template<typename Key, typename Value>
+	template<typename ParamKey>
+	bool HashMap<Key, Value>::Has(const ParamKey& key) const
+	{
+		if (m_buckets.Empty()) return false;
+		const usize bucket = Hash<Key>::Value(key) & (m_buckets.Size() - 2);
+		typedef Node* NodePtr;
+		for (NodePtr it = m_buckets[bucket], end = m_buckets[bucket + 1]; it != end; it = it->next)
+		{
+			if (it->first == key)
+			{
+				return true;
+			}
+		}
+		return false;
 	}
 
 	template<typename Key, typename Value>

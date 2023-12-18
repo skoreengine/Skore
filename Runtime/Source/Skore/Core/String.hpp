@@ -5,6 +5,7 @@
 
 #include "Skore/Defines.hpp"
 #include "Allocator.hpp"
+#include "Hash.hpp"
 
 namespace Skore
 {
@@ -829,6 +830,45 @@ namespace Skore
 		lhs.Append(rhs);
 	}
 
+	template<typename Element>
+	struct Hash<BasicString<Element>>
+	{
+		constexpr static bool HasHash = true;
+
+		constexpr static usize Value(const BasicStringView<Element>& stringView)
+		{
+			usize hash = 0;
+			for (const char c: stringView)
+			{
+				hash = c + (hash << 6) + (hash << 16) - hash;
+			}
+			return hash;
+		}
+
+		constexpr static usize Value(const char* ch)
+		{
+			usize hash = 0;
+			for (const char* c = ch; *c != '\0'; ++c)
+			{
+				hash = *ch + (hash << 6) + (hash << 16) - hash;
+			}
+			return hash;
+		}
+
+		constexpr static usize Value(const BasicString<Element>& string)
+		{
+			usize hash = 0;
+			for (auto it = string.begin(); it != string.end(); ++it)
+			{
+				hash = *it + (hash << 6) + (hash << 16) - hash;
+			}
+			return hash;
+		}
+	};
+
 	using String = BasicString<char>;
+
+
+
 
 }

@@ -3,6 +3,9 @@
 
 #include "doctest.h"
 #include "Skore/Core/HashMap.hpp"
+#include "Skore/Core/String.hpp"
+#include "Skore/Core/StringView.hpp"
+#include <string>
 
 namespace Skore::Tests
 {
@@ -16,6 +19,8 @@ namespace Skore::Tests
 		}
 
 		bool check = true;
+
+		CHECK(map.Has(100));
 
 		for (int i = 0; i < 1000; ++i)
 		{
@@ -93,6 +98,43 @@ namespace Skore::Tests
 
 		CHECK(map.Find(1) == map.end());
 		CHECK(map.Find(2) != map.end());
+
+		map.Erase(2);
+
+		CHECK(map.Find(2) == map.end());
 	}
+
+	TEST_CASE("Core::HashMapTestStr")
+	{
+		HashMap<String, String> map{};
+		map["AAAA"] = "BBBB";
+		map["CCCC"] = "DDDD";
+
+		for (int i = 0; i < 10000; ++i)
+		{
+			std::string str = std::to_string(i);
+			map.Insert(String{str.c_str()}, String{str.c_str()});
+		}
+
+		{
+			auto it = map.Find("CCCC");
+			REQUIRE(it != map.end());
+			CHECK(it->second == "DDDD");
+		}
+
+		{
+			StringView strView = {"AAAA"};
+			auto it = map.Find(strView);
+			REQUIRE(it != map.end());
+			CHECK(it->second == "BBBB");
+		}
+	}
+	TEST_CASE("Core::HashMapTestEmplace")
+	{
+		HashMap<String, String> map{};
+		map.Emplace("AAA", "BBB");
+		CHECK(map.Has("AAA"));
+	}
+
 
 }

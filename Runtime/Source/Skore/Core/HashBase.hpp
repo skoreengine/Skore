@@ -21,6 +21,7 @@ namespace Skore
 	{
 		Node* operator->() const;
 		Node& operator*() const;
+		explicit operator bool() const noexcept;
 		Node* node{};
 	};
 
@@ -36,6 +37,7 @@ namespace Skore
 
 		Node* operator->() const;
 		Node& operator*() const;
+		explicit operator bool() const noexcept;
 		Node* node{};
 	};
 
@@ -78,6 +80,18 @@ namespace Skore
 	static inline bool operator!=(const HashIterator<LNode>& lhs, const HashIterator<RNode>& rhs)
 	{
 		return lhs.node != rhs.node;
+	}
+
+	template<typename Node>
+	HashIterator<Node>::operator bool() const noexcept
+	{
+		return node != nullptr;
+	}
+
+	template<typename Node>
+	HashIterator<const Node>::operator bool() const noexcept
+	{
+		return node != nullptr;
 	}
 
 	template<typename Key, typename Value>
