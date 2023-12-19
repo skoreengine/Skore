@@ -9,13 +9,16 @@ namespace Skore::Tests
 
 	TEST_CASE("Core::FormatterTestBasics")
 	{
-		char buffer[100]{};
-		Formatter::FormatTo("test {}", buffer, 20);
+		{
+			char buffer[100]{};
+			Formatter::FormatTo("test {} {} {}", buffer, 20, 30, 50);
+			CHECK(StringView(buffer) == "test 20 30 50");
+		}
 
-		int a= 0;
+		{
+			char buffer[100]{};
+			Formatter::FormatTo("test {}", buffer, "str");
+			CHECK(StringView(buffer) == "test str");
+		}
 	}
-
-
-
-
 }

@@ -3,6 +3,7 @@
 
 #include "App.hpp"
 #include "Skore/Platform/Platform.hpp"
+#include "Skore/Core/Logger.hpp"
 
 namespace Skore
 {
@@ -10,6 +11,7 @@ namespace Skore
 	{
 		bool running = false;
 		Window* window = nullptr;
+		Logger& logger = Logger::GetLogger("Skore::App");
 	};
 
 	AppContext app = {};
@@ -25,6 +27,11 @@ namespace Skore
 
 		app.window  = Platform::CreateWindow(windowCreation);
 		app.running = true;
+
+		for (int i = 0; i < 100; ++i)
+		{
+			app.logger.Info("aaa {} ", i);
+		}
 	}
 
 	bool App::Update()
@@ -41,8 +48,8 @@ namespace Skore
 
 	void App::Shutdown()
 	{
+		Platform::DestroyWindow(app.window);
 		Platform::Shutdown();
-		app = {};
 	}
 }
 

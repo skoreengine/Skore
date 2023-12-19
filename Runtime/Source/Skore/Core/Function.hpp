@@ -23,8 +23,8 @@ namespace Skore
 	private:
 		Func m_func;
 	public:
-		FunctionBaseImpl(Func func) : m_func(func)
-		{}
+		template<typename Other>
+		FunctionBaseImpl(Other&& other) : m_func(Traits::Forward<Other>(other)) {}
 
 		Ret Call(Params ...params) override
 		{
@@ -50,7 +50,7 @@ namespace Skore
 		template<typename Func>
 		void Set(Func&& func)
 		{
-			m_funcBase = MakeShared<FunctionBaseImpl<Func, Ret, Params...>>(func);
+			m_funcBase = MakeShared<FunctionBaseImpl<Traits::RemoveAll<Func>, Ret, Params...>>(Traits::Forward<Func>(func));
 		}
 
 	private:
@@ -79,10 +79,18 @@ namespace Skore
 		Function() noexcept {}
 		Function(Traits::NullPtr) noexcept {}
 
+
 		template<typename Func>
 		Function(Func&& func)
 		{
-			this->Set(func);
+			this->Set(Traits::Forward<Func>(func));
+		}
+
+		template<typename Func>
+		Function& operator=(Func&& func)
+		{
+			this->Set(Traits::Forward<Func>(func));
+			return *this;
 		}
 
 		operator bool() const noexcept

@@ -23,6 +23,7 @@ namespace Skore
 		using ConstIterator = const T*;
 
 		BasicString();
+		BasicString(usize size);
 		BasicString(const BasicString& other);
 		BasicString(const BasicStringView<T>& stringView);
 		BasicString(BasicString&& other) noexcept;
@@ -111,10 +112,15 @@ namespace Skore
 	{}
 
 	template<typename T>
-	SK_FINLINE BasicString<T>::BasicString(Allocator* allocator)
-		: m_size(0)
+	SK_FINLINE BasicString<T>::BasicString(Allocator* allocator) : m_size(0), m_allocator(allocator)
 	{
 		m_buffer[0] = 0;
+	}
+
+	template<typename T>
+	SK_FINLINE BasicString<T>::BasicString(usize size)
+	{
+		Resize(size);
 	}
 
 	template<typename T>
