@@ -19,10 +19,10 @@ namespace Skore
 	template<typename Node>
 	struct HashIterator
 	{
+		Node* node{};
 		Node* operator->() const;
 		Node& operator*() const;
 		explicit operator bool() const noexcept;
-		Node* node{};
 	};
 
 
@@ -30,6 +30,10 @@ namespace Skore
 	struct HashIterator<const Node>
 	{
 		HashIterator() = default;
+
+		HashIterator(Node* other) : node(other)
+		{
+		}
 
 		HashIterator(HashIterator<Node> other) : node(other.node)
 		{

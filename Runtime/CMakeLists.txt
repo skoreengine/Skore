@@ -1,5 +1,8 @@
 add_subdirectory(Thirdparty/GLFW)
 
+string(TIMESTAMP TODAY "%Y%m%d")
+add_compile_definitions(SK_VERSION="Pre-Alpha.0.1.${TODAY}")
+
 
 file(GLOB_RECURSE SKORE_RUNTIME_SOURCES Source/*.hpp Source/*.cpp Source/*.h Source/*.c)
 add_library(SkoreRuntime SHARED ${SKORE_RUNTIME_SOURCES})

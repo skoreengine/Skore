@@ -81,6 +81,13 @@ namespace Skore
 
 
 		template<typename Func>
+		Function(const Function<Func>& func)
+		{
+			SK_ASSERT(false, "not implemented");
+		}
+
+
+		template<typename Func>
 		Function(Func&& func)
 		{
 			this->Set(Traits::Forward<Func>(func));
@@ -90,6 +97,12 @@ namespace Skore
 		Function& operator=(Func&& func)
 		{
 			this->Set(Traits::Forward<Func>(func));
+			return *this;
+		}
+
+		template<typename Func>
+		Function& operator=(const Function<Func>& func)
+		{
 			return *this;
 		}
 

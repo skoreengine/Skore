@@ -39,6 +39,8 @@ namespace Skore
 
 		const T* Data() const;
 		T* Data();
+		const T& Back() const;
+		T& Back();
 		usize Size() const;
 		usize Capacity() const;
 		bool Empty() const;
@@ -193,6 +195,18 @@ namespace Skore
 	bool Array<T>::operator!=(const Array& other) const
 	{
 		return !((*this) == other);
+	}
+
+	template<typename T>
+	SK_FINLINE const T& Array<T>::Back() const
+	{
+		return m_last[-1];
+	}
+
+	template<typename T>
+	SK_FINLINE T& Array<T>::Back()
+	{
+		return m_last[-1];
 	}
 
 	template<typename T>

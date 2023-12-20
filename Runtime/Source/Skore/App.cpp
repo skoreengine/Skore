@@ -4,6 +4,7 @@
 #include "App.hpp"
 #include "Skore/Platform/Platform.hpp"
 #include "Skore/Core/Logger.hpp"
+#include "Skore/Core/Reflection.hpp"
 
 namespace Skore
 {
@@ -28,10 +29,7 @@ namespace Skore
 		app.window  = Platform::CreateWindow(windowCreation);
 		app.running = true;
 
-		for (int i = 0; i < 100; ++i)
-		{
-			app.logger.Info("aaa {} ", i);
-		}
+		app.logger.Info("Skore {} initialized ", SK_VERSION);
 	}
 
 	bool App::Update()
@@ -42,7 +40,6 @@ namespace Skore
 		{
 			app.running = false;
 		}
-
 		return app.running;
 	}
 
@@ -50,6 +47,7 @@ namespace Skore
 	{
 		Platform::DestroyWindow(app.window);
 		Platform::Shutdown();
+		Reflection::Shutdown();
 	}
 }
 

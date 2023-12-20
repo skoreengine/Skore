@@ -2,6 +2,7 @@
 
 #include "Skore/Defines.hpp"
 #include "Hash.hpp"
+#include "StringConverter.hpp"
 
 namespace Skore
 {
@@ -468,6 +469,31 @@ namespace Skore
 				hash = *it + (hash << 6) + (hash << 16) - hash;
 			}
 			return hash;
+		}
+	};
+
+	template<>
+	struct StringConverter<BasicStringView<char>>
+	{
+		typedef char Element;
+
+		constexpr static bool  HasConverter = true;
+		constexpr static usize BufferCount  = 0;
+
+		static usize Size(const BasicStringView<Element>& stringView)
+		{
+			return stringView.Size();
+		}
+
+		static usize ToString(char* buffer, usize pos, const BasicStringView<Element>& value)
+		{
+			StrCopy(buffer, pos, value.begin(), value.Size());
+			return value.Size();
+		}
+
+		static void FromString(const char* str, usize size, BasicStringView<Element>& value)
+		{
+
 		}
 	};
 }

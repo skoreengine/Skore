@@ -20,7 +20,20 @@ struct MemAllocation
 	usize bytes;
 };
 
-std::unordered_map<usize, MemAllocation> allocations{};
+struct Allocations
+{
+	std::unordered_map<usize, MemAllocation> alloc;
+};
+
+std::unordered_map<usize, MemAllocation>& GetAllocations()
+{
+	static Allocations* allocations{};
+	if (allocations == nullptr)
+	{
+		allocations = new Allocations;
+	}
+	return allocations->alloc;
+}
 
 
 CPtr TestAllocatorMemAlloc(CPtr alloc, usize bytes)
@@ -29,7 +42,7 @@ CPtr TestAllocatorMemAlloc(CPtr alloc, usize bytes)
 	mapAlloc += bytes;
 	CPtr memory = std::malloc(bytes);
 	usize address = reinterpret_cast<usize>(memory);
-	allocations.insert(std::make_pair(address, MemAllocation{bytes}));
+	GetAllocations().insert(std::make_pair(address, MemAllocation{bytes}));
 	return memory;
 }
 
@@ -41,7 +54,7 @@ void TestAllocatorMemFree(CPtr alloc, CPtr ptr, usize bytes)
 	mapAlloc -= bytes;
 	std::free(ptr);
 
-	allocations.erase(address);
+	GetAllocations().erase(address);
 }
 
 
@@ -61,7 +74,7 @@ int main(int argc, char** argv)
 
 	std::cout << "[Skore] Total Alloc : " << totalAlloc << std::endl;
 	std::cout << "[Skore] Alloc End : " << mapAlloc << std::endl;
-	std::cout << "[Skore] Pending Dealloc: " << allocations.size() << std::endl;
+	std::cout << "[Skore] Pending Dealloc: " << GetAllocations().size() << std::endl;
 
-	return res + allocations.size();
+	return res + GetAllocations().size();
 }
