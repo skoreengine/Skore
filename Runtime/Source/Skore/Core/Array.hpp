@@ -6,6 +6,7 @@
 #include "Skore/Defines.hpp"
 #include "Traits.hpp"
 #include "New.hpp"
+#include "Allocator.hpp"
 
 namespace Skore
 {

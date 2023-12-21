@@ -10,6 +10,7 @@
 #include "Array.hpp"
 #include "SharedPtr.hpp"
 #include "HashMap.hpp"
+#include "Span.hpp"
 
 namespace Skore
 {
@@ -49,13 +50,27 @@ namespace Skore
 		};
 	}
 
+	class SK_API AttributeHandler
+	{
+		typedef ConstCPtr(*FnGetValue)(AttributeHandler* handler);
+	public:
+		AttributeHandler(TypeID typeId, usize size);
+
+		void SetFnGetValue(FnGetValue fnGetValue);
+		ConstCPtr GetValue();
+	private:
+		FnGetValue m_fnGetValue;
+		TypeID     m_typeId{};
+		usize      m_size{};
+	};
+
 	//type handlers
 
 	class SK_API ConstructorHandler
 	{
 	public:
-		typedef void (* PlacementNewFn)(ConstructorHandler* handler, CPtr memory, CPtr* params);
-		typedef CPtr (* NewInstanceFn)(ConstructorHandler* handler, Allocator* allocator, CPtr* params);
+		typedef void (*PlacementNewFn)(ConstructorHandler* handler, CPtr memory, CPtr* params);
+		typedef CPtr (*NewInstanceFn)(ConstructorHandler* handler, Allocator* allocator, CPtr* params);
 
 		void SetPlacementNewFn(PlacementNewFn placementNewFn);
 		void SetNewInstanceFn(NewInstanceFn newInstanceFn);
@@ -71,18 +86,40 @@ namespace Skore
 	{
 		typedef FieldInfo (*FnGetFieldInfo)(const FieldHandler* fieldHandler);
 		typedef CPtr  (*FnGetFieldPointer)(const FieldHandler* fieldHandler, CPtr instance);
+		typedef void  (*FnCopyValueTo)(const FieldHandler* fieldHandler, ConstCPtr instance, CPtr value);
+		typedef void  (*FnSetValue)(const FieldHandler* fieldHandler, CPtr instance, ConstCPtr value);
 	public:
 		explicit FieldHandler(const String& name);
 
 		FieldInfo GetFieldInfo() const;
 		CPtr GetFieldPointer(CPtr instance) const;
+		void CopyValueTo(ConstCPtr instance, CPtr value);
+		void SetValue(CPtr instance, ConstCPtr value);
+
+		template<typename T>
+		T& GetFieldAs(CPtr instance)
+		{
+			return *static_cast<T*>(GetFieldPointer(instance));
+		}
+
+		template<typename T>
+		void SetValueAs(CPtr instance, const T& value)
+		{
+			SetValue(instance, &value);
+		}
 
 		void SetFnGetFieldInfo(FnGetFieldInfo fieldInfoFn);
 		void SetFnGetFieldPointer(FnGetFieldPointer fnGetFieldPointer);
+		void SetFnCopyValueTo(FnCopyValueTo fnCopyValueTo);
+		void SetFnSetValue(FnSetValue fnSetValue);
 	private:
 		String            m_name;
 		FnGetFieldInfo    m_fnGetFieldInfo;
 		FnGetFieldPointer m_fnGetFieldPointer;
+		FnCopyValueTo     m_fnCopyValueTo;
+		FnSetValue        m_fnSetValue;
+
+		HashMap<TypeID, SharedPtr<AttributeHandler>> m_attributes{};
 	};
 
 	class SK_API TypeHandler
@@ -94,9 +131,11 @@ namespace Skore
 
 		ConstructorHandler& NewConstructor(TypeID* ids, usize size);
 		ConstructorHandler* FindConstructor(TypeID* ids, usize size) const;
+		Span<ConstructorHandler*> GetConstructors() const;
 
 		FieldHandler& NewField(const StringView& fieldName);
-		FieldHandler* FindField(const StringView& fieldName);
+		FieldHandler* FindField(const StringView& fieldName) const;
+		Span<FieldHandler*> GetFields() const;
 
 
 		CPtr NewInstance(Allocator* allocator = GetDefaultAllocator()) const
@@ -217,6 +256,8 @@ namespace Skore
 		{
 			fieldHandler.SetFnGetFieldInfo(&GetFieldImpl);
 			fieldHandler.SetFnGetFieldPointer(&FnGetFieldPointerImpl);
+			fieldHandler.SetFnCopyValueTo(&CopyValueToImpl);
+			fieldHandler.SetFnSetValue(&SetValue);
 		}
 
 	private:
@@ -231,6 +272,16 @@ namespace Skore
 		{
 			return &((*static_cast<Owner*>(instance)).*mfp);
 		}
+
+		static void CopyValueToImpl(const FieldHandler* fieldHandler, ConstCPtr instance, CPtr value)
+		{
+			*static_cast<Field*>(value) = ((*static_cast<const Owner*>(instance)).*mfp);
+		}
+
+		static void SetValue(const FieldHandler* fieldHandler, CPtr instance, ConstCPtr value)
+		{
+			((*static_cast<Owner*>(instance)).*mfp) = *static_cast<const Field*>(value);
+		}
 	};
 
 	template<auto mfp, typename Field>
@@ -242,12 +293,12 @@ namespace Skore
 	struct FieldTemplateDecomposer<mfp, FieldType Owner::*>
 	{
 
-		[[maybe_unused]] static TypeID GetTypeId()
+		static TypeID GetTypeId()
 		{
 			return TypeId<FieldType>();
 		}
 
-		[[maybe_unused]] static auto CreateHandler(FieldHandler& fieldHandler)
+		static auto CreateHandler(FieldHandler& fieldHandler)
 		{
 			return NativeFieldHandler<mfp, Owner, FieldType>(fieldHandler);
 		}
@@ -284,7 +335,6 @@ namespace Skore
 			using FieldDecomp = FieldTemplateDecomposer<mfp, decltype(mfp)>;
 			return FieldDecomp::CreateHandler(m_typeHandler.NewField(name));
 		}
-
 
 	private:
 		TypeHandler& m_typeHandler;

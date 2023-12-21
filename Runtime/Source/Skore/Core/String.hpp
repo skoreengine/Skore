@@ -6,6 +6,7 @@
 #include "Skore/Defines.hpp"
 #include "Allocator.hpp"
 #include "Hash.hpp"
+#include "StringConverter.hpp"
 
 namespace Skore
 {
@@ -84,6 +85,21 @@ namespace Skore
 		template<typename Type>
 		BasicString<T>& Append(const Type& value)
 		{
+			static_assert(StringConverter<Type>::HasConverter, "[StringConverter] type has no converter");
+			if constexpr (StringConverter<Type>::BufferCount > 0)
+			{
+				char buffer[StringConverter<Type>::BufferCount];
+				auto size = StringConverter<Type>::ToString(buffer, 0, value);
+				Append(buffer, buffer + size);
+			}
+			else
+			{
+				auto initialSize = Size();
+				auto newSize = Size() + StringConverter<Type>::Size(value);
+				Resize(newSize);
+				StringConverter<Type>::ToString(begin() + initialSize, 0, value);
+				m_size = newSize | (m_size & c_longFlag);
+			}
 			return *this;
 		}
 

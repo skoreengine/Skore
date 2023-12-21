@@ -218,4 +218,11 @@ namespace Skore
 		}
 	};
 
+	template<typename TValue>
+	constexpr inline usize HashValue(const TValue& value)
+	{
+		static_assert(Hash<TValue>::HasHash, "type has no hash implementation");
+		return Hash<TValue>::Value(value);
+	}
+
 }

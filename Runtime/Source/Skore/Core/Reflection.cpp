@@ -58,6 +58,11 @@ namespace Skore
 		return nullptr;
 	}
 
+	Span<ConstructorHandler*> TypeHandler::GetConstructors() const
+	{
+		return m_constructorArray;
+	}
+
 	FieldHandler& TypeHandler::NewField(const StringView& fieldName)
 	{
 		auto it = m_fields.Find(fieldName);
@@ -69,13 +74,18 @@ namespace Skore
 		return *it->second;
 	}
 
-	FieldHandler* TypeHandler::FindField(const StringView& fieldName)
+	FieldHandler* TypeHandler::FindField(const StringView& fieldName) const
 	{
 		if (auto it = m_fields.Find(fieldName))
 		{
 			return it->second.Get();
 		}
 		return nullptr;
+	}
+
+	Span<FieldHandler*> TypeHandler::GetFields() const
+	{
+		return m_fieldArray;
 	}
 
 	void TypeHandler::Destroy(CPtr instance, Allocator* allocator) const
@@ -85,8 +95,6 @@ namespace Skore
 			m_destroyFn(this, allocator, instance);
 		}
 	}
-
-
 
 	TypeHandler& Reflection::NewType(const StringView& name, const TypeInfo& typeInfo)
 	{
@@ -127,6 +135,23 @@ namespace Skore
 		}
 		return nullptr;
 	}
+
+	void AttributeHandler::SetFnGetValue(AttributeHandler::FnGetValue fnGetValue)
+	{
+		m_fnGetValue = fnGetValue;
+	}
+
+	ConstCPtr AttributeHandler::GetValue()
+	{
+		if (m_fnGetValue)
+		{
+			return m_fnGetValue(this);
+		}
+		return nullptr;
+	}
+
+	AttributeHandler::AttributeHandler(TypeID typeId, usize size) : m_typeId(typeId), m_size(size)
+	{}
 
 	void ConstructorHandler::SetPlacementNewFn(ConstructorHandler::PlacementNewFn placementNewFn)
 	{
@@ -176,5 +201,31 @@ namespace Skore
 	void FieldHandler::SetFnGetFieldPointer(FieldHandler::FnGetFieldPointer fnGetFieldPointer)
 	{
 		m_fnGetFieldPointer = fnGetFieldPointer;
+	}
+
+	void FieldHandler::CopyValueTo(ConstCPtr instance, CPtr value)
+	{
+		if (m_fnCopyValueTo)
+		{
+			m_fnCopyValueTo(this, instance, value);
+		}
+	}
+
+	void FieldHandler::SetValue(CPtr instance, ConstCPtr value)
+	{
+		if (m_fnSetValue)
+		{
+			m_fnSetValue(this, instance, value);
+		}
+	}
+
+	void FieldHandler::SetFnCopyValueTo(FnCopyValueTo fnCopyValueTo)
+	{
+		m_fnCopyValueTo = fnCopyValueTo;
+	}
+
+	void FieldHandler::SetFnSetValue(FnSetValue fnSetValue)
+	{
+		m_fnSetValue = fnSetValue;
 	}
 }

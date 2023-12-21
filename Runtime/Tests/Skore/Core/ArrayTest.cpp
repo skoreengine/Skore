@@ -4,7 +4,7 @@
 #include "doctest.h"
 #include "Skore/Core/String.hpp"
 #include "Skore/Core/Array.hpp"
-
+#include "Skore/Core/Span.hpp"
 
 namespace Skore::Tests
 {
@@ -258,5 +258,25 @@ namespace Skore::Tests
 		arr3.EmplaceBack(2);
 
 		CHECK(arr1 != arr3);
+	}
+
+	TEST_CASE("Core::SpanTestBasics")
+	{
+		Array<i32> arr1{};
+		arr1.EmplaceBack(10);
+		arr1.EmplaceBack(20);
+
+		Span<i32> span = arr1;
+
+		CHECK(span.Size() == 2);
+		CHECK(span[0] == 10);
+		CHECK(span[1] == 20);
+
+		i32 sum = 0;
+		for(const i32& vl: span)
+		{
+			sum += vl;
+		}
+		CHECK(sum == 30);
 	}
 }

@@ -4,8 +4,36 @@
 #pragma once
 
 #include "Skore/Defines.hpp"
+
 namespace Skore
 {
+
+	template<typename Type>
+	class BasicStringView;
+
+	template<typename Element, typename Func>
+	inline void Split(const BasicStringView<Element>& string, const BasicStringView<Element>& delimiter, Func&& func)
+	{
+		usize start = 0;
+		for (int i = 0; i < string.Size(); ++i)
+		{
+			BasicStringView<Element> comp{string.Data() + i, delimiter.Size()};
+			if (comp == delimiter)
+			{
+				BasicStringView<Element> split{string.Data() + start, i - start};
+				if (!split.Empty())
+				{
+					func(split);
+				}
+				start = i + delimiter.Size();
+			}
+		}
+		BasicStringView<Element> split{string.Data() + start, string.Size() - start};
+		if (!split.Empty())
+		{
+			func(split);
+		}
+	}
 
 	template<typename Type>
 	inline void StrCopy(Type* dest, const Type* origin, usize size)
@@ -35,6 +63,16 @@ namespace Skore
 			}
 		}
 		return 0;
+	}
+
+	template<typename Element>
+	inline u64 HexTo64(const BasicStringView<Element>& str) {
+		u64 res = 0;
+		for (const char c: str) {
+			char v = (c & 0xF) + (c >> 6) | ((c >> 3) & 0x8);
+			res = (res << 4) | (u64) v;
+		}
+		return res;
 	}
 
 }

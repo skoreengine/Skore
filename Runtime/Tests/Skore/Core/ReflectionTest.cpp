@@ -65,7 +65,6 @@ namespace Skore::Tests
 
 	void TestTypeRegister()
 	{
-
 		auto testStruct = Reflection::Type<ReflectionTestStruct>();
 		testStruct.Field<&ReflectionTestStruct::uint>("uint");
 		testStruct.Field<&ReflectionTestStruct::iint>("iint");
@@ -117,11 +116,13 @@ namespace Skore::Tests
 		Reflection::Shutdown();
 	}
 
-	TEST_CASE("Core::ReflectionBasics")
+	TEST_CASE("Core::ReflectionFields")
 	{
 		TestTypeRegister();
 		TypeHandler* testStruct = Reflection::FindTypeByName("Skore::Tests::ReflectionTestStruct");
 		REQUIRE(testStruct != nullptr);
+
+		REQUIRE(testStruct->GetConstructors().Size() == 1);
 
 		FieldHandler* uintField = testStruct->FindField("uint");
 		FieldHandler* iintField = testStruct->FindField("iint");
@@ -131,12 +132,26 @@ namespace Skore::Tests
 		REQUIRE(iintField != nullptr);
 		REQUIRE(stringField != nullptr);
 
+		Span<FieldHandler*> fields = testStruct->GetFields();
+		CHECK(fields.Size() == 3);
+
 		CHECK(GetTypeID<u32>() == uintField->GetFieldInfo().typeInfo.typeId);
 		CHECK(GetTypeID<String>() == stringField->GetFieldInfo().typeInfo.typeId);
 
 		CPtr instance = testStruct->NewInstance();
-		//iintField->GetFieldPointer(instance);
+		REQUIRE(instance != nullptr);
 
+		static_cast<ReflectionTestStruct*>(instance)->iint = 100;
+
+		CHECK(iintField->GetFieldPointer(instance) != nullptr);
+		CHECK(iintField->GetFieldAs<i32>(instance) == 100);
+
+		uintField->SetValueAs(instance, 10u);
+
+		u32 vlCopy{};
+		uintField->CopyValueTo(instance, &vlCopy);
+		CHECK(vlCopy == 10);
+		testStruct->Destroy(instance);
 
 		Reflection::Shutdown();
 	}
