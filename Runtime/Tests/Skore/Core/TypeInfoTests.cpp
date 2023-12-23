@@ -13,7 +13,7 @@ namespace Skore::Tests
 	{
 		String typeName = GetTypeName<TypeIDTest>();
 		TypeID typeId = GetTypeID<TypeIDTest>();
+        CHECK(typeId > 0);
 		CHECK(typeName == "Skore::Tests::TypeIDTest");
-		CHECK(10386068229281325449ull == typeId); //TODO : check this on other platforms
 	}
 }

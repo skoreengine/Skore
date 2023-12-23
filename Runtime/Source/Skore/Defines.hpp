@@ -34,6 +34,7 @@ typedef decltype(sizeof(0)) usize;
 #   define SK_FINLINE __forceinline
 #elif __linux__
 #   define SK_API   __attribute__ ((visibility ("default")))
+#   define SK_DESKTOP  1
 #   define SK_PATH_SEPARATOR '/'
 #   define SK_UNIX
 #   define SK_LINUX

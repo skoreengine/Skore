@@ -5,6 +5,9 @@
 
 #include "Skore/Defines.hpp"
 
+#include <type_traits>
+#include <utility>
+
 namespace Skore::Traits
 {
 
@@ -87,33 +90,23 @@ namespace Skore::Traits
 	template<typename T>
 	constexpr bool IsAggregate = __is_aggregate(T);
 
-	typedef decltype(__nullptr) NullPtr;
+	typedef decltype(nullptr) NullPtr;
 
 
 	template<typename T>
 	constexpr bool AlwaysFalse = false;
 
 	template<typename T>
-	constexpr bool IsIntegral = true; //TODO
+	constexpr bool IsIntegral = std::is_integral_v<T>;
 
-
-	template<class T, T... Vals>
-	struct IntegerSequence
-	{
-		static_assert(IsIntegral<T>, "IntegerSequence<T, I...> requires T to be an integral type.");
-		using ValueType = T;
-
-		static constexpr usize Size() noexcept
-		{
-			return sizeof...(Vals);
-		}
-	};
+    template<class T, T... Vals>
+    using IntegerSequence = std::integer_sequence<T, Vals...>;
 
 	template <usize... Vals>
 	using IndexSequence = IntegerSequence<usize, Vals...>;
 
 	template <class T, T Size>
-	using MakeIntegerSequence = __make_integer_seq<IntegerSequence, T, Size>;
+	using MakeIntegerSequence = std::make_integer_sequence<T, Size>;
 
 	template<class T, class = void>
 	struct AddReference
@@ -156,7 +149,7 @@ namespace Skore::Traits
 
 
 	template <class T>
-	constexpr bool IsDestructible = __is_destructible(T);
+	constexpr bool IsDestructible = std::is_destructible_v<T>;
 
 	template<typename... Ts>
 	struct MakeVoid

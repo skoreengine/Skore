@@ -48,11 +48,10 @@ namespace Skore
 		const auto  now = std::chrono::system_clock::now();
 		std::time_t t   = std::chrono::system_clock::to_time_t(now);
 
-		tm buf;
-		gmtime_s(&buf, &t);
+		tm* buf = localtime(&t);
 
 		char buffer[50];
-		strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &buf);
+		strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", buf);
 
 		auto duration     = now.time_since_epoch();
 

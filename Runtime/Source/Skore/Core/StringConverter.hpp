@@ -77,6 +77,28 @@ namespace Skore
 		}
 	};
 
+    template<>
+    struct StringConverter<ul32>
+    {
+        constexpr static bool  HasConverter = true;
+        constexpr static usize BufferCount  = 21;
+
+        static usize Size(const ul32& value)
+        {
+            return Converters::U64ToString(nullptr, 0, value);
+        }
+
+        static usize ToString(char* buffer, usize pos, const ul32& value)
+        {
+            return Converters::U32ToString(buffer + pos, BufferCount, value);
+        }
+
+        static void FromString(const char* str, usize size, ul32& value)
+        {
+            value = Converters::U32FromString(str);
+        }
+    };
+
 	template<>
 	struct StringConverter<i32>
 	{

@@ -216,7 +216,7 @@ namespace Skore
 
 		static void PlacementNewImpl(ConstructorHandler* handler, CPtr memory, CPtr* params)
 		{
-			const auto size = sizeof...(Args);
+			const usize size = sizeof...(Args);
 			Eval<Args...>(memory, params, Traits::MakeIntegerSequence<usize, size>{});
 		}
 
@@ -295,7 +295,7 @@ namespace Skore
 
 		static TypeID GetTypeId()
 		{
-			return TypeId<FieldType>();
+			return GetTypeID<FieldType>();
 		}
 
 		static auto CreateHandler(FieldHandler& fieldHandler)
