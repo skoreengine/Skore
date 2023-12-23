@@ -14,9 +14,9 @@ namespace Skore::Tests
 
 		CHECK(FileSystem::CreateDirectory("test"));
 		FileStatus status = FileSystem::FileStatus("test");
-		CHECK(status.exists);
-		CHECK(status.isDirectory);
-		CHECK(status.lastModifiedTime > 0);
+		CHECK(status.Exists);
+		CHECK(status.IsDirectory);
+		CHECK(status.LastModifiedTime > 0);
 		CHECK(FileSystem::Remove("test"));
 	}
 };

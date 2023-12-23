@@ -65,7 +65,7 @@ namespace Skore::GL
 		if (beginRenderPassInfo.Swapchain)
 		{
 			Vec4 cleanColor = beginRenderPassInfo.ClearValues[0];
-			glClearColor(cleanColor.x, cleanColor.y, cleanColor.z, cleanColor.w);
+			glClearColor(cleanColor.X, cleanColor.Y, cleanColor.Z, cleanColor.W);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		}
 		else if (beginRenderPassInfo.RenderPass)
@@ -81,12 +81,12 @@ namespace Skore::GL
 
 	void SetViewport(RenderCommands cmd, const ViewportInfo& viewportInfo)
 	{
-		glViewport(viewportInfo.x, viewportInfo.y, viewportInfo.width, viewportInfo.height);
+		glViewport(viewportInfo.X, viewportInfo.Y, viewportInfo.Width, viewportInfo.Height);
 	}
 
 	void SetScissor(RenderCommands cmd, const Rect& rect)
 	{
-		glScissor(rect.x, rect.y, rect.width, rect.height);
+		glScissor(rect.X, rect.Y, rect.Width, rect.Height);
 	}
 
 	RenderCommands BeginFrame()

@@ -26,10 +26,10 @@ namespace Skore
 {
 	DirIterator& DirIterator::operator++()
 	{
-		if (m_handler)
+		if (m_Handler)
 		{
 			WIN32_FIND_DATA fd{};
-			auto res = FindNextFile(m_handler, &fd);
+			auto res = FindNextFile(m_Handler, &fd);
 			if (res != 0)
 			{
 				do
@@ -37,44 +37,44 @@ namespace Skore
 					bool isDirEntry = !(strcmp(fd.cFileName, ".") == 0 || strcmp(fd.cFileName, "..") == 0);
 					if (isDirEntry)
 					{
-						m_path = m_directory + fd.cFileName;
+						m_Path = m_Directory + fd.cFileName;
 						return *this;
 					}
-				} while (::FindNextFile(m_handler, &fd) != 0);
+				} while (::FindNextFile(m_Handler, &fd) != 0);
 			}
-			FindClose(m_handler);
-			m_handler = nullptr;
+			FindClose(m_Handler);
+			m_Handler = nullptr;
 		}
-		m_path = {};
+		m_Path = {};
 		return *this;
 	}
 
-	DirIterator::DirIterator(const Path& directory) : m_directory(directory), m_handler(nullptr)
+	DirIterator::DirIterator(const Path& directory) : m_Directory(directory), m_Handler(nullptr)
 	{
 		WIN32_FIND_DATA fd{};
 		char cwd[MAX_PATH];
 		sprintf(cwd, "%s\\*.*", directory.GetString().CStr());
-		m_handler = FindFirstFile(cwd, &fd);
+		m_Handler = FindFirstFile(cwd, &fd);
 
-		if (m_handler != INVALID_HANDLE_VALUE)
+		if (m_Handler != INVALID_HANDLE_VALUE)
 		{
 			do
 			{
 				bool isDirEntry = !(strcmp(fd.cFileName, ".") == 0 || strcmp(fd.cFileName, "..") == 0);
 				if (isDirEntry)
 				{
-					m_path = directory + fd.cFileName;
+					m_Path = directory + fd.cFileName;
 					break;
 				}
-			} while (::FindNextFile(m_handler, &fd) != 0);
+			} while (::FindNextFile(m_Handler, &fd) != 0);
 		}
 	}
 
 	DirIterator::~DirIterator()
 	{
-		if (m_handler)
+		if (m_Handler)
 		{
-			FindClose(m_handler);
+			FindClose(m_Handler);
 		}
 	}
 }

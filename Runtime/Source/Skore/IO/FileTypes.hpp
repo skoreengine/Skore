@@ -16,22 +16,22 @@ namespace Skore
 
 		Path& operator*()
 		{
-			return m_path;
+			return m_Path;
 		}
 
 		Path* operator->()
 		{
-			return &m_path;
+			return &m_Path;
 		}
 
 		friend bool operator==(const DirIterator& a, const DirIterator& b)
 		{
-			return a.m_path.GetString() == b.m_path.GetString();
+			return a.m_Path.GetString() == b.m_Path.GetString();
 		};
 
 		friend bool operator!=(const DirIterator& a, const DirIterator& b)
 		{
-			return a.m_path.GetString() != b.m_path.GetString();
+			return a.m_Path.GetString() != b.m_Path.GetString();
 		};
 
 		DirIterator& operator++();
@@ -39,21 +39,21 @@ namespace Skore
 		virtual ~DirIterator();
 
 	private:
-		Path m_directory{};
-		Path m_path{};
-		CPtr m_handler{};
+		Path m_Directory{};
+		Path m_Path{};
+		CPtr m_Handler{};
 	};
 
 	class SK_API DirectoryEntries
 	{
 	public:
 
-		DirectoryEntries(const Path& directory) : m_directory(directory)
+		DirectoryEntries(const Path& directory) : m_Directory(directory)
 		{}
 
 		DirIterator begin()
 		{
-			return DirIterator{m_directory};
+			return DirIterator{m_Directory};
 		}
 
 		DirIterator end()
@@ -62,14 +62,14 @@ namespace Skore
 		}
 
 	private:
-		Path m_directory{};
+		Path m_Directory{};
 	};
 
 	struct FileStatus
 	{
-		bool exists{};
-		bool isDirectory{};
-		u64  lastModifiedTime{};
+		bool Exists{};
+		bool IsDirectory{};
+		u64  LastModifiedTime{};
 	};
 
 	enum FileResult_

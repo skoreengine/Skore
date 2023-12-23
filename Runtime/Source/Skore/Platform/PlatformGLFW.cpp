@@ -19,7 +19,7 @@ namespace Skore
 
 	struct Window
 	{
-		GLFWwindow* handler;
+		GLFWwindow* Handler;
 	};
 
 	void Platform::Init()
@@ -53,12 +53,12 @@ namespace Skore
 
 	void Platform::SwapBuffers(Window* window)
 	{
-		glfwSwapBuffers(window->handler);
+		glfwSwapBuffers(window->Handler);
 	}
 
 	void Platform::MakeContextCurrent(Skore::Window* window)
 	{
-		glfwMakeContextCurrent(window->handler);
+		glfwMakeContextCurrent(window->Handler);
 	}
 
 	CPtr Platform::GetProcAddress()
@@ -78,14 +78,14 @@ namespace Skore
 
 		float xScale = 1.f, yScale = 1.f;
 		glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &xScale, &yScale);
-		size = {u32(size.x * xScale), u32(size.y * yScale)};
+		size = {u32(size.X * xScale), u32(size.Y * yScale)};
 
 		Window* window = new Window{};
-		window->handler = glfwCreateWindow(size.x, size.y, title.Data(), nullptr, nullptr);
+		window->Handler = glfwCreateWindow(size.X, size.Y, title.Data(), nullptr, nullptr);
 
-		PlatformStyle::ApplyDarkStyle(window->handler);
+		PlatformStyle::ApplyDarkStyle(window->Handler);
 
-		glfwShowWindow(window->handler);
+		glfwShowWindow(window->Handler);
 
 		return window;
 	}
@@ -93,7 +93,7 @@ namespace Skore
 	Extent Platform::GetWindowExtent(Window* window)
 	{
 		i32 width, height;
-		glfwGetWindowSize(window->handler, &width, &height);
+		glfwGetWindowSize(window->Handler, &width, &height);
 		return Extent{static_cast<u32>(width), static_cast<u32>(height)};
 	}
 
@@ -104,12 +104,12 @@ namespace Skore
 
 	bool Platform::UserRequestedClose(Window* window)
 	{
-		return glfwWindowShouldClose(window->handler);
+		return glfwWindowShouldClose(window->Handler);
 	}
 
 	void Platform::DestroyWindow(Window* window)
 	{
-		glfwDestroyWindow(window->handler);
+		glfwDestroyWindow(window->Handler);
 		delete window;
 	}
 

@@ -56,15 +56,15 @@ namespace Skore
 		});
 
 		ViewportInfo viewportInfo{};
-		viewportInfo.x        = 0.;
-		viewportInfo.y        = 0.;
-		viewportInfo.width    = (f32) extent.width;
-		viewportInfo.height   = (f32) extent.height;
-		viewportInfo.maxDepth = 0.;
-		viewportInfo.minDepth = 1.;
+		viewportInfo.X        = 0.;
+		viewportInfo.Y        = 0.;
+		viewportInfo.Width    = (f32) extent.Width;
+		viewportInfo.Height   = (f32) extent.Height;
+		viewportInfo.MaxDepth = 0.;
+		viewportInfo.MinDepth = 1.;
 		RenderDevice::SetViewport(cmd, viewportInfo);
 
-		auto scissor = Rect{0, 0, extent.width, extent.height};
+		auto scissor = Rect{0, 0, extent.Width, extent.Height};
 		RenderDevice::SetScissor(cmd, scissor);
 
 		RenderDevice::EndRenderPass(cmd);

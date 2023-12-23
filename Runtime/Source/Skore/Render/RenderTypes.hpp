@@ -97,27 +97,27 @@ namespace Skore
 
 	struct GraphicsPipelineCreation
 	{
-		RenderPass        renderPass{};
-		RenderSwapchain   swapchain{};
-		String            shader{};
-		bool              depthWrite        = false;
-		bool              stencilTest       = false;
-		bool              blendEnabled      = false;
-		f32               minDepthBounds    = 1.0;
-		f32               maxDepthBounds    = 0.0;
-		CullMode          cullMode          = CullMode_None;
-		CompareOp         compareOperator   = CompareOp_Always;
-		PolygonMode       polygonMode       = PolygonMode_Fill;
-		PrimitiveTopology primitiveTopology = PrimitiveTopology_TriangleList;
+		RenderPass        RenderPass{};
+		RenderSwapchain   Swapchain{};
+		String            Shader{};
+		bool              DepthWrite        = false;
+		bool              StencilTest       = false;
+		bool              BlendEnabled      = false;
+		f32               MinDepthBounds    = 1.0;
+		f32               MaxDepthBounds    = 0.0;
+		CullMode          CullMode          = CullMode_None;
+		CompareOp         CompareOperator   = CompareOp_Always;
+		PolygonMode       PolygonMode       = PolygonMode_Fill;
+		PrimitiveTopology PrimitiveTopology = PrimitiveTopology_TriangleList;
 	};
 
 	struct ViewportInfo
 	{
-		f32 x{};
-		f32 y{};
-		f32 width{};
-		f32 height{};
-		f32 minDepth{};
-		f32 maxDepth{};
+		f32 X{};
+		f32 Y{};
+		f32 Width{};
+		f32 Height{};
+		f32 MinDepth{};
+		f32 MaxDepth{};
 	};
 }

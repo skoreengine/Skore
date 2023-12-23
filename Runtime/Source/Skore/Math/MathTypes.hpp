@@ -10,24 +10,24 @@ namespace Skore
 
 	struct Extent
 	{
-		u32 width;
-		u32 height;
+		u32 Width;
+		u32 Height;
 	};
 
 	struct Rect
 	{
-		i32 x;
-		i32 y;
-		u32 width;
-		u32 height;
+		i32 X;
+		i32 Y;
+		u32 Width;
+		u32 Height;
 	};
 
 	struct FRect
 	{
-		f32 x;
-		f32 y;
-		f32 width;
-		f32 height;
+		f32 X;
+		f32 Y;
+		f32 Width;
+		f32 Height;
 	};
 
 	template<typename Type>
@@ -39,60 +39,60 @@ namespace Skore
 			{
 				union
 				{
-					Type x, r, width;
+					Type X, R, Width;
 				};
 
 				union
 				{
-					Type y, g, height;
+					Type Y, G, Height;
 				};
 			};
-			Type c[2] = {static_cast<Type>(0)};
+			Type Coord[2] = {static_cast<Type>(0)};
 		};
 
 		TVec2 operator/(const TVec2& b) const
 		{
-			return {this->x / b.x, this->y / b.y};
+			return {this->X / b.X, this->Y / b.Y};
 		}
 
 		TVec2 operator/(const Type& b) const
 		{
-			return {this->x / b, this->y / b};
+			return {this->X / b, this->Y / b};
 		}
 
 		TVec2 operator*(const Type& b) const
 		{
-			return TVec2{this->x * b, this->y * b};
+			return TVec2{this->X * b, this->Y * b};
 		}
 
 		TVec2 operator*(const TVec2<Type>& b) const
 		{
-			return TVec2{this->x * b.x, this->y * b.y};
+			return TVec2{this->X * b.X, this->Y * b.Y};
 		}
 
 		TVec2 operator+(const TVec2<Type>& b) const
 		{
-			return TVec2{this->x + b.x, this->y + b.y};
+			return TVec2{this->X + b.X, this->Y + b.Y};
 		}
 
 		TVec2 operator-(const TVec2<Type>& b) const
 		{
-			return TVec2{this->x - b.x, this->y - b.y};
+			return TVec2{this->X - b.X, this->Y - b.Y};
 		}
 
 		TVec2 operator>>(const int vl) const
 		{
-			return TVec2{this->x >> vl, this->y >> vl};
+			return TVec2{this->X >> vl, this->Y >> vl};
 		}
 
 		TVec2 operator<<(const int vl) const
 		{
-			return TVec2{this->x << vl, this->y << vl};
+			return TVec2{this->X << vl, this->Y << vl};
 		}
 
 		bool operator==(const Type& b) const
 		{
-			return this->x == b && this->y == b;
+			return this->X == b && this->Y == b;
 		}
 
 		bool operator!=(const Type& b) const
@@ -102,32 +102,32 @@ namespace Skore
 
 		inline const Type& operator[](usize axis) const
 		{
-			return c[axis];
+			return Coord[axis];
 		}
 
 		inline Type& operator[](usize axis)
 		{
-			return c[axis];
+			return Coord[axis];
 		}
 
 		inline TVec2& operator*=(const TVec2& rhs)
 		{
-			this->x *= rhs.x;
-			this->y *= rhs.y;
+			this->X *= rhs.X;
+			this->Y *= rhs.Y;
 			return *this;
 		}
 
 		template<typename T>
 		inline TVec2& operator*=(const T& rhs)
 		{
-			this->x *= rhs;
-			this->y *= rhs;
+			this->X *= rhs;
+			this->Y *= rhs;
 			return *this;
 		}
 
 		inline bool operator>(const Type& b) const
 		{
-			return x > b && y > b;
+			return X > b && Y > b;
 		}
 	};
 
@@ -139,98 +139,98 @@ namespace Skore
 		{
 			struct
 			{
-				Type x;
-				Type y;
-				Type z;
+				Type X;
+				Type Y;
+				Type Z;
 			};
-			Type coord[3] = {0};
+			Type Coord[3] = {0};
 		};
 
 		inline const Type& operator[](int axis) const
 		{
-			return coord[axis];
+			return Coord[axis];
 		}
 
 		inline Type& operator[](int axis)
 		{
-			return coord[axis];
+			return Coord[axis];
 		}
 
 		inline TVec3 operator/(const TVec3& b) const
 		{
-			return {this->x / b.x, this->y / b.y, this->z / b.z};
+			return {this->X / b.X, this->Y / b.Y, this->Z / b.Z};
 		}
 
 		inline TVec3 operator*(const TVec3& b) const
 		{
-			return {this->x * b.x, this->y * b.y, this->z * b.z};
+			return {this->X * b.X, this->Y * b.Y, this->Z * b.Z};
 		}
 
 		inline TVec3 operator-(const TVec3& b) const
 		{
-			return {this->x - b.x, this->y - b.y, this->z - b.z};
+			return {this->X - b.X, this->Y - b.Y, this->Z - b.Z};
 		}
 
 		inline TVec3 operator/(const Type& b) const
 		{
-			return {this->x / b, this->y / b, this->z / b};
+			return {this->X / b, this->Y / b, this->Z / b};
 		}
 
 		inline TVec3 operator+(const Type& b) const
 		{
-			return {this->x + b, this->y + b, this->z + b};
+			return {this->X + b, this->Y + b, this->Z + b};
 		}
 
 		inline TVec3 operator-(const Type& b) const
 		{
-			return {this->x - b, this->y - b, this->z - b};
+			return {this->X - b, this->Y - b, this->Z - b};
 		}
 
 		inline TVec3 operator*(const Type& b) const
 		{
-			return {this->x * b, this->y * b, this->z * b};
+			return {this->X * b, this->Y * b, this->Z * b};
 		}
 
 		inline TVec3 operator>>(const int vl) const
 		{
-			return {this->x >> vl, this->y >> vl, this->z >> vl};
+			return {this->X >> vl, this->Y >> vl, this->Z >> vl};
 		}
 
 		inline TVec3 operator<<(const int vl) const
 		{
-			return {this->x << vl, this->y << vl, this->z << vl};
+			return {this->X << vl, this->Y << vl, this->Z << vl};
 		}
 
 		inline TVec3& operator*=(const TVec3& rhs)
 		{
-			this->x *= rhs.x;
-			this->y *= rhs.y;
-			this->z *= rhs.z;
+			this->X *= rhs.X;
+			this->Y *= rhs.Y;
+			this->Z *= rhs.Z;
 			return *this;
 		}
 
 		inline TVec3& operator+=(const TVec3& rhs)
 		{
-			this->x += rhs.x;
-			this->y += rhs.y;
-			this->z += rhs.z;
+			this->X += rhs.X;
+			this->Y += rhs.Y;
+			this->Z += rhs.Z;
 			return *this;
 		}
 
 		inline TVec3& operator-=(const TVec3& rhs)
 		{
-			this->x -= rhs.x;
-			this->y -= rhs.y;
-			this->z -= rhs.z;
+			this->X -= rhs.X;
+			this->Y -= rhs.Y;
+			this->Z -= rhs.Z;
 			return *this;
 		}
 
 		template<typename U>
 		inline TVec3 operator/=(U u)
 		{
-			this->x /= static_cast<Type>(u);
-			this->y /= static_cast<Type>(u);
-			this->z /= static_cast<Type>(u);
+			this->X /= static_cast<Type>(u);
+			this->Y /= static_cast<Type>(u);
+			this->Z /= static_cast<Type>(u);
 			return *this;
 		}
 
@@ -242,20 +242,20 @@ namespace Skore
 
 		inline const Type* operator[](usize axis) const
 		{
-			return coord[axis];
+			return Coord[axis];
 		}
 
 		inline Type* operator[](usize axis)
 		{
-			return coord[axis];
+			return Coord[axis];
 		}
 
 		TVec3<Type> operator-()
 		{
 			TVec3<Type> ret{};
-			ret.x = this->x * -1;
-			ret.y = this->y * -1;
-			ret.z = this->z * -1;
+			ret.X = this->X * -1;
+			ret.Y = this->Y * -1;
+			ret.Z = this->Z * -1;
 			return ret;
 		}
 
@@ -290,102 +290,102 @@ namespace Skore
 			{
 				union
 				{
-					Type x, r, width;
+					Type X, R, Width;
 				};
 
 				union
 				{
-					Type y, g, height;
+					Type Y, G, Height;
 				};
 
 				union
 				{
-					Type z, b;
+					Type Z, B;
 				};
 
 				union
 				{
-					Type w, a;
+					Type W, A;
 				};
 
 			};
-			Type c[4] = {0};
+			Type Coord[4] = {0};
 		};
 
 		TVec4() = default;
 
 		TVec4(const Type value)
 		{
-			c[0] = value;
-			c[1] = value;
-			c[2] = value;
-			c[3] = value;
+			Coord[0] = value;
+			Coord[1] = value;
+			Coord[2] = value;
+			Coord[3] = value;
 		}
 
-		TVec4(const Type _x, const Type _y, const Type _z, const Type _w)
+		TVec4(const Type x, const Type y, const Type z, const Type w)
 		{
-			c[0] = _x;
-			c[1] = _y;
-			c[2] = _z;
-			c[3] = _w;
+			Coord[0] = x;
+			Coord[1] = y;
+			Coord[2] = z;
+			Coord[3] = w;
 		}
 
-		TVec4(const TVec3 <Type>& vec, const Type _w)
+		TVec4(const TVec3 <Type>& vec, const Type w)
 		{
-			c[0] = vec.x;
-			c[1] = vec.y;
-			c[2] = vec.z;
-			c[3] = _w;
+			Coord[0] = vec.X;
+			Coord[1] = vec.Y;
+			Coord[2] = vec.Z;
+			Coord[3] = w;
 		}
 
-		inline const Type& operator[](int axis) const
+		inline const Type& operator[](i32 axis) const
 		{
-			return c[axis];
+			return Coord[axis];
 		}
 
-		inline Type& operator[](int axis)
+		inline Type& operator[](i32 axis)
 		{
-			return c[axis];
+			return Coord[axis];
 		}
 
 		inline TVec4 operator/(const TVec4& b) const
 		{
-			return {this->x / b.x, this->y / b.y, this->z / b.z, this->w / b.w};
+			return {this->X / b.X, this->Y / b.Y, this->Z / b.Z, this->W / b.W};
 		}
 
 		inline TVec4 operator+(const TVec4& b) const
 		{
-			return {this->x + b.x, this->y + b.y, this->z + b.z, this->w + b.w};
+			return {this->X + b.X, this->Y + b.Y, this->Z + b.Z, this->W + b.W};
 		}
 
 		inline TVec4 operator*(const TVec4& b) const
 		{
-			return {this->x * b.x, this->y * b.y, this->z * b.z, this->w * b.w};
+			return {this->X * b.X, this->Y * b.Y, this->Z * b.Z, this->W * b.W};
 		}
 
 		inline TVec4 operator-(const TVec4& b) const
 		{
-			return {this->x - b.x, this->y - b.y, this->z - b.z, this->w - b.w};
+			return {this->X - b.X, this->Y - b.Y, this->Z - b.Z, this->W - b.W};
 		}
 
 		inline TVec4 operator/(const Type& b) const
 		{
-			return {this->x / b, this->y / b, this->z / b, this->w / b};
+			return {this->X / b, this->Y / b, this->Z / b, this->W / b};
 		}
 
 		inline TVec4 operator*(const Type& b) const
 		{
-			return {this->x * b, this->y * b, this->z * b, this->w * b};
+			return {this->X * b, this->Y * b, this->Z * b, this->W * b};
 		}
 
 		inline TVec4 operator>>(const int vl) const
 		{
-			return {this->x >> vl, this->y >> vl, this->z >> vl, this->w >> vl};
+			return {this->X >> vl, this->Y >> vl, this->Z >> vl, this->W >> vl};
 		}
 
 		inline TVec4 operator<<(const int vl) const
 		{
-			return {this->x << vl, this->y << vl, this->z << vl, this->w << vl};
+			return {this->X << vl, this->Y << vl, this->Z << vl, this->W << vl};
 		}
 
 		bool operator==(const Type& b) const;
@@ -402,61 +402,61 @@ namespace Skore
 	template<typename Type>
 	bool TVec3<Type>::operator==(const Type& b) const
 	{
-		return Compare<Type>::IsEqual(x, b) && Compare<Type>::IsEqual(y, b) && Compare<Type>::IsEqual(z, b);
+		return Compare<Type>::IsEqual(X, b) && Compare<Type>::IsEqual(Y, b) && Compare<Type>::IsEqual(Z, b);
 	}
 
 	template<typename Type>
 	bool TVec3<Type>::operator==(const TVec3<Type>& b) const
 	{
-		return Compare<Type>::IsEqual(x, b.x) && Compare<Type>::IsEqual(y, b.y) && Compare<Type>::IsEqual(z, b.z);
+		return Compare<Type>::IsEqual(X, b.X) && Compare<Type>::IsEqual(Y, b.Y) && Compare<Type>::IsEqual(Z, b.Z);
 	}
 
 	template<typename Type>
 	bool TVec3<Type>::operator>(const Type& b) const
 	{
-		return x > b && y > b && z > b;
+		return X > b && Y > b && Z > b;
 	}
 
 	template<typename T>
 	inline TVec3<T> operator-(const TVec3<T>& a, const TVec3<T>& b)
 	{
-		return {a.x - b.x, a.y - b.y, a.z - b.z};
+		return {a.X - b.X, a.Y - b.Y, a.Z - b.Z};
 	}
 
 	template<typename T>
 	inline TVec3<T> operator+(const TVec3<T>& a, const TVec3<T>& b)
 	{
-		return {a.x + b.x, a.y + b.y, a.z + b.z};
+		return {a.X + b.X, a.Y + b.Y, a.Z + b.Z};
 	}
 
 	template<typename T>
 	inline TVec3<T> operator*(const T& a, const TVec3<T>& b)
 	{
-		return {a * b.x, a * b.y, a * b.z};
+		return {a * b.X, a * b.Y, a * b.Z};
 	}
 
 	template<typename T>
 	inline TVec3<T> operator/(const T& a, const TVec3<T>& b)
 	{
-		return {a / b.x, a / b.y, a / b.z};
+		return {a / b.X, a / b.Y, a / b.Z};
 	}
 
 	template<typename T>
 	inline TVec3<T> zero(const T& a, const TVec3<T>& b)
 	{
-		return {a * b.x, a * b.y, a * b.z};
+		return {a * b.X, a * b.Y, a * b.Z};
 	}
 
 	template<typename Type>
 	bool TVec4<Type>::operator==(const Type& b) const
 	{
-		return Compare<Type>::IsEqual(x, b) && Compare<Type>::IsEqual(y, b) && Compare<Type>::IsEqual(z, b) && Compare<Type>::IsEqual(w, b);
+		return Compare<Type>::IsEqual(X, b) && Compare<Type>::IsEqual(Y, b) && Compare<Type>::IsEqual(Z, b) && Compare<Type>::IsEqual(W, b);
 	}
 
 	template<typename Type>
 	bool TVec4<Type>::operator==(const TVec4<Type>& b) const
 	{
-		return Compare<Type>::IsEqual(x, b.x) && Compare<Type>::IsEqual(y, b.y) && Compare<Type>::IsEqual(z, b.z) && Compare<Type>::IsEqual(w, b.w);
+		return Compare<Type>::IsEqual(X, b.X) && Compare<Type>::IsEqual(Y, b.Y) && Compare<Type>::IsEqual(Z, b.Z) && Compare<Type>::IsEqual(W, b.W);
 	}
 
 	template<typename Type>
@@ -474,7 +474,7 @@ namespace Skore
 	template<typename T>
 	inline bool operator==(const TVec2<T>& a, const TVec2<T>& b)
 	{
-		return a.x == b.x && a.y == b.y;
+		return a.X == b.X && a.Y == b.Y;
 	}
 
 	template<typename T>
@@ -486,7 +486,7 @@ namespace Skore
 	template<typename Type, typename Type2>
 	TVec2<Type> operator*(const TVec2<Type>& a, const TVec2<Type2>& b)
 	{
-		return {a.x * b.x, a.y * b.y};
+		return {a.X * b.X, a.Y * b.Y};
 	}
 
 
