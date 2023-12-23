@@ -19,7 +19,7 @@ namespace Skore
 
 	struct Window
 	{
-		GLFWwindow* handler{};
+		GLFWwindow* Handler{};
 	};
 
 	void Platform::Init()
@@ -44,30 +44,29 @@ namespace Skore
 	{
 		Window* window = Alloc<Window>();
 
-		bool maximized = (windowCreation.windowFlags & WindowFlags_Maximized);
+		bool maximized = (windowCreation.WindowFlags & WindowFlags_Maximized);
 		glfwWindowHint(GLFW_MAXIMIZED, maximized);
 
 		float xScale = 1.f, yScale = 1.f;
 		glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &xScale, &yScale);
-		UVec2 size = {u32(windowCreation.rect.width * xScale), u32(windowCreation.rect.height * yScale)};
+		UVec2 size = {u32(windowCreation.Rect.width * xScale), u32(windowCreation.Rect.height * yScale)};
 
-		window->handler = glfwCreateWindow(size.width, size.height, windowCreation.title.CStr(), nullptr, nullptr);
+		window->Handler = glfwCreateWindow(size.width, size.height, windowCreation.Title.CStr(), nullptr, nullptr);
 
-		ApplyDarkStyle(window->handler);
-		glfwShowWindow(window->handler);
-
+		ApplyDarkStyle(window->Handler);
+		glfwShowWindow(window->Handler);
 
 		return window;
 	}
 
 	bool Platform::WindowUserRequestedClose(Window* window)
 	{
-		return glfwWindowShouldClose(window->handler);
+		return glfwWindowShouldClose(window->Handler);
 	}
 
 	void Platform::DestroyWindow(Window* window)
 	{
-		glfwDestroyWindow(window->handler);
+		glfwDestroyWindow(window->Handler);
 		Destroy(window);
 	}
 }

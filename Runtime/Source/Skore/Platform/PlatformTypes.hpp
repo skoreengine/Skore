@@ -192,8 +192,8 @@ namespace Skore
 
 	struct WindowCreation
 	{
-		StringView  title       = "";
-		Rect        rect        = {0,0,800, 600};
-		WindowFlags windowFlags = WindowFlags_None;
+		StringView  Title       = "";
+		Rect        Rect        = {0,0,800, 600};
+		WindowFlags WindowFlags = WindowFlags_None;
 	};
 }

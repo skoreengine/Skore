@@ -10,9 +10,9 @@ namespace Skore
 {
 	struct AppContext
 	{
-		bool running = false;
-		Window* window = nullptr;
-		Logger& logger = Logger::GetLogger("Skore::App");
+		bool Running = false;
+		Window* Window = nullptr;
+		Logger& Logger = Logger::GetLogger("Skore::App");
 	};
 
 	AppContext app = {};
@@ -22,30 +22,29 @@ namespace Skore
 		Platform::Init();
 
 		WindowCreation windowCreation{
-			.title = "Skore",
-			.windowFlags = WindowFlags_Maximized
+			.Title = "Skore",
+			.WindowFlags = WindowFlags_Maximized
 		};
 
-		app.window  = Platform::CreateWindow(windowCreation);
-		app.running = true;
-
-		app.logger.Info("Skore {} initialized ", SK_VERSION);
+		app.Window  = Platform::CreateWindow(windowCreation);
+		app.Running = true;
+		app.Logger.Info("Skore {} initialized ", SK_VERSION);
 	}
 
 	bool App::Update()
 	{
 		Platform::ProcessEvents();
 
-		if (Platform::WindowUserRequestedClose(app.window))
+		if (Platform::WindowUserRequestedClose(app.Window))
 		{
-			app.running = false;
+			app.Running = false;
 		}
-		return app.running;
+		return app.Running;
 	}
 
 	void App::Shutdown()
 	{
-		Platform::DestroyWindow(app.window);
+		Platform::DestroyWindow(app.Window);
 		Platform::Shutdown();
 		Reflection::Shutdown();
 	}
