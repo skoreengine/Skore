@@ -7,6 +7,6 @@ namespace Skore::GL
 {
 	struct GLSwapchain
 	{
-		Window* window{};
+		Window Window{};
 	};
 }

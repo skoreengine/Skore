@@ -14,7 +14,7 @@ namespace Skore
 		void (*Init)();
 		void (*Shutdown)();
 
-		RenderSwapchain         (*CreateSwapchain)(Window* window, bool vsync);
+		RenderSwapchain         (*CreateSwapchain)(Window window, bool vsync);
 		void                    (*DestroySwapchain)(RenderSwapchain swapchain);
 		RenderPipelineState     (*CreateGraphicsPipelineState)(const GraphicsPipelineCreation& graphicsPipelineCreation);
 		void                    (*DestroyGraphicsPipelineState)(RenderPipelineState renderPipelineState);

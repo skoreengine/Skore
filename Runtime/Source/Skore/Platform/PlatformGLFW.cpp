@@ -17,9 +17,9 @@ namespace Skore
 
 	PlatformContext platform{};
 
-	struct Window
+	struct GLFWWindowHandler
 	{
-		GLFWwindow* Handler;
+		GLFWwindow* GlfwWindow;
 	};
 
 	void Platform::Init()
@@ -42,7 +42,7 @@ namespace Skore
 		glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 #ifdef SK_APPLE
-		//glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
+		glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 #endif
 	}
 
@@ -51,14 +51,14 @@ namespace Skore
 		glfwSwapInterval(vsync);
 	}
 
-	void Platform::SwapBuffers(Window* window)
+	void Platform::SwapBuffers(Window window)
 	{
-		glfwSwapBuffers(window->Handler);
+		glfwSwapBuffers(static_cast<GLFWWindowHandler*>(window.Handler)->GlfwWindow);
 	}
 
-	void Platform::MakeContextCurrent(Skore::Window* window)
+	void Platform::MakeContextCurrent(Window window)
 	{
-		glfwMakeContextCurrent(window->Handler);
+		glfwMakeContextCurrent(static_cast<GLFWWindowHandler*>(window.Handler)->GlfwWindow);
 	}
 
 	CPtr Platform::GetProcAddress()
@@ -71,7 +71,7 @@ namespace Skore
 		glfwTerminate();
 	}
 
-	Window* Platform::CreateWindow(const StringView& title, UVec2 size, WindowFlags flags)
+	Window Platform::CreateWindow(const StringView& title, UVec2 size, WindowFlags flags)
 	{
 		bool maximized = (flags & WindowFlags_Maximized);
 		glfwWindowHint(GLFW_MAXIMIZED, maximized);
@@ -80,20 +80,20 @@ namespace Skore
 		glfwGetMonitorContentScale(glfwGetPrimaryMonitor(), &xScale, &yScale);
 		size = {u32(size.X * xScale), u32(size.Y * yScale)};
 
-		Window* window = new Window{};
-		window->Handler = glfwCreateWindow(size.X, size.Y, title.Data(), nullptr, nullptr);
 
-		PlatformStyle::ApplyDarkStyle(window->Handler);
+		GLFWWindowHandler* handler = new GLFWWindowHandler{};
+		handler->GlfwWindow = glfwCreateWindow(size.X, size.Y, title.Data(), nullptr, nullptr);
 
-		glfwShowWindow(window->Handler);
+		PlatformStyle::ApplyDarkStyle(handler->GlfwWindow);
+		glfwShowWindow(handler->GlfwWindow);
 
-		return window;
+		return {handler};
 	}
 
-	Extent Platform::GetWindowExtent(Window* window)
+	Extent Platform::GetWindowExtent(Window window)
 	{
 		i32 width, height;
-		glfwGetWindowSize(window->Handler, &width, &height);
+		glfwGetWindowSize(static_cast<GLFWWindowHandler*>(window.Handler)->GlfwWindow, &width, &height);
 		return Extent{static_cast<u32>(width), static_cast<u32>(height)};
 	}
 
@@ -102,15 +102,15 @@ namespace Skore
 		glfwPollEvents();
 	}
 
-	bool Platform::UserRequestedClose(Window* window)
+	bool Platform::UserRequestedClose(Window window)
 	{
-		return glfwWindowShouldClose(window->Handler);
+		return glfwWindowShouldClose(static_cast<GLFWWindowHandler*>(window.Handler)->GlfwWindow);
 	}
 
-	void Platform::DestroyWindow(Window* window)
+	void Platform::DestroyWindow(Window window)
 	{
-		glfwDestroyWindow(window->Handler);
-		delete window;
+		glfwDestroyWindow(static_cast<GLFWWindowHandler*>(window.Handler)->GlfwWindow);
+		delete static_cast<GLFWWindowHandler*>(window.Handler);
 	}
 
 }

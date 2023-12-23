@@ -25,7 +25,7 @@ namespace Skore
 		renderDeviceApi.Shutdown();
 	}
 
-	RenderSwapchain RenderDevice::CreateSwapchain(Window* window, bool vsync)
+	RenderSwapchain RenderDevice::CreateSwapchain(Window window, bool vsync)
 	{
 		return renderDeviceApi.CreateSwapchain(window, vsync);
 	}

@@ -9,7 +9,7 @@ namespace Skore::Platform
 {
 	SK_API void InitOpenGL();
 	SK_API void SetVSync(bool vsync);
-	SK_API void MakeContextCurrent(Window* window);
-	SK_API void SwapBuffers(Window* window);
+	SK_API void MakeContextCurrent(Window window);
+	SK_API void SwapBuffers(Window window);
 	SK_API CPtr GetProcAddress();
 }

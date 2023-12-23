@@ -8,19 +8,12 @@
 #include "Skore/Math/MathTypes.hpp"
 #include "Skore/Core/Span.hpp"
 
-#define RENDER_HANDLER(StructName) struct StructName { \
-CPtr handler;                                      \
- operator bool() const {return handler != nullptr; }          \
- bool operator==(const StructName& b) const { return this->handler == b.handler; } \
- bool operator!=(const StructName& b) const { return this->handler != b.handler; } \
-}
-
 namespace Skore
 {
-	RENDER_HANDLER(RenderSwapchain);
-	RENDER_HANDLER(RenderPass);
-	RENDER_HANDLER(RenderCommands);
-	RENDER_HANDLER(RenderPipelineState);
+	SK_HANDLER(RenderSwapchain);
+	SK_HANDLER(RenderPass);
+	SK_HANDLER(RenderCommands);
+	SK_HANDLER(RenderPipelineState);
 
 
 	enum RenderDeviceType_

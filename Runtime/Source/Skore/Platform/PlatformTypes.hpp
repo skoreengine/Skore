@@ -7,7 +7,7 @@
 
 namespace Skore
 {
-	struct Window;
+	SK_HANDLER(Window);
 
 	enum WindowFlags_
 	{

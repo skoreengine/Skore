@@ -16,7 +16,7 @@ namespace Skore::GL
 	struct GLContext
 	{
 		Logger& Logger = Logger::GetLogger("Skore::GL");
-		bool gladLoaded = false;
+		bool GladLoaded = false;
 	};
 
 	GLContext gl;
@@ -31,15 +31,15 @@ namespace Skore::GL
 
 	}
 
-	RenderSwapchain CreateSwapchain(Window* window, bool vsync)
+	RenderSwapchain CreateSwapchain(Window window, bool vsync)
 	{
 		Platform::MakeContextCurrent(window);
 #ifdef SK_DESKTOP
-		if (!gl.gladLoaded && !gladLoadGLLoader((GLADloadproc) Platform::GetProcAddress()))
+		if (!gl.GladLoaded && !gladLoadGLLoader((GLADloadproc) Platform::GetProcAddress()))
 		{
 			gl.Logger.Error("[GL] Failed to initialize GLAD");
 		}
-		gl.gladLoaded = true;
+		gl.GladLoaded = true;
 #endif
 		Platform::SetVSync(vsync);
 		return {new GLSwapchain{window}};
@@ -47,7 +47,7 @@ namespace Skore::GL
 
 	void DestroySwapchain(RenderSwapchain swapchain)
 	{
-		delete static_cast<GLSwapchain*>(swapchain.handler);
+		delete static_cast<GLSwapchain*>(swapchain.Handler);
 	}
 
 	RenderPipelineState CreateGraphicsPipelineState(const GraphicsPipelineCreation& graphicsPipelineCreation)
@@ -96,7 +96,7 @@ namespace Skore::GL
 
 	void EndFrame(RenderSwapchain swapchain)
 	{
-		Platform::SwapBuffers(static_cast<GLSwapchain*>(swapchain.handler)->window);
+		Platform::SwapBuffers(static_cast<GLSwapchain*>(swapchain.Handler)->Window);
 	}
 
 }

@@ -14,7 +14,7 @@ namespace Skore::RenderDevice
 	SK_API void Init(const AppCreation& creation);
 	SK_API void Shutdown();
 
-	SK_API RenderSwapchain        CreateSwapchain(Window* window, bool vsync);
+	SK_API RenderSwapchain        CreateSwapchain(Window window, bool vsync);
 	SK_API RenderPipelineState    CreateGraphicsPipelineState(const GraphicsPipelineCreation& graphicsPipelineCreation);
 
 	SK_API void                   DestroyGraphicsPipelineState(RenderPipelineState pipelineState);

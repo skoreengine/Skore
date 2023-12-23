@@ -11,8 +11,8 @@ namespace Skore
 {
 	struct AppContext
 	{
-		bool Running = false;
-		Window* Window = nullptr;
+		bool            Running    = false;
+		Window          Window{};
 		RenderSwapchain Swapchain{};
 		Vec4            ClearColor = Vec4{0, 0, 0, 1};
 		Logger& Logger = Logger::GetLogger("Skore::App");
