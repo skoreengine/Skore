@@ -30,7 +30,7 @@ namespace Skore::Tests
 				REQUIRE(false);
 			}
 
-			if (it->second != i * 100)
+			if (it->Second != i * 100)
 			{
 				check = false;
 			}
@@ -54,7 +54,7 @@ namespace Skore::Tests
 		i32 sum = 0;
 		for(HashMap<int, int>::Node& it : map)
 		{
-			sum += it.second;
+			sum += it.Second;
 		}
 
 		CHECK(sum == 60);
@@ -119,14 +119,14 @@ namespace Skore::Tests
 		{
 			auto it = map.Find("CCCC");
 			REQUIRE(it != map.end());
-			CHECK(it->second == "DDDD");
+			CHECK(it->Second == "DDDD");
 		}
 
 		{
 			StringView strView = {"AAAA"};
 			auto it = map.Find(strView);
 			REQUIRE(it != map.end());
-			CHECK(it->second == "BBBB");
+			CHECK(it->Second == "BBBB");
 		}
 	}
 	TEST_CASE("Core::HashMapTestEmplace")

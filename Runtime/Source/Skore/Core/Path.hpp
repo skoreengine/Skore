@@ -17,57 +17,57 @@ namespace Skore
 		BasePath()
 		{}
 
-		BasePath(const String& string) : m_absolutePath(string)
+		BasePath(const String& string) : m_AbsolutePath(string)
 		{
 		}
 
-		BasePath(const StringView& absolutePath) : m_absolutePath(absolutePath)
+		BasePath(const StringView& absolutePath) : m_AbsolutePath(absolutePath)
 		{
 		}
 
-		BasePath(const char* str) : m_absolutePath(str)
+		BasePath(const char* str) : m_AbsolutePath(str)
 		{
 		}
 
-		BasePath(const char* str, usize size) : m_absolutePath(str, size)
+		BasePath(const char* str, usize size) : m_AbsolutePath(str, size)
 		{
 		}
 
-		BasePath(const BasePath& path) : m_absolutePath(path.m_absolutePath)
+		BasePath(const BasePath& path) : m_AbsolutePath(path.m_AbsolutePath)
 		{
 		}
 
 
 		bool Empty() const
 		{
-			return m_absolutePath.Empty();
+			return m_AbsolutePath.Empty();
 		}
 
 		decltype(auto) begin()
 		{
-			return m_absolutePath.begin();
+			return m_AbsolutePath.begin();
 		}
 
 		decltype(auto) end()
 		{
-			return m_absolutePath.end();
+			return m_AbsolutePath.end();
 		}
 
 		decltype(auto) begin() const
 		{
-			return m_absolutePath.begin();
+			return m_AbsolutePath.begin();
 		}
 
 		decltype(auto) end() const
 		{
-			return m_absolutePath.end();
+			return m_AbsolutePath.end();
 		}
 
 		decltype(auto) Parent() const
 		{
 			String parentPath{};
 			bool foundSeparator = false;
-			auto it = m_absolutePath.end();
+			auto it = m_AbsolutePath.end();
 			do
 			{
 				if (foundSeparator)
@@ -79,7 +79,7 @@ namespace Skore
 					foundSeparator = true;
 				}
 
-				if (it == m_absolutePath.begin())
+				if (it == m_AbsolutePath.begin())
 				{
 					return BasePath{parentPath};
 				}
@@ -89,13 +89,13 @@ namespace Skore
 
 		BasicStringView<Type> Extension() const
 		{
-			auto it = m_absolutePath.end();
-			while (it != m_absolutePath.begin())
+			auto it = m_AbsolutePath.end();
+			while (it != m_AbsolutePath.begin())
 			{
 				it--;
 				if (*it == '.')
 				{
-					return BasicStringView<Type>{it, (usize) (m_absolutePath.end() - it)};
+					return BasicStringView<Type>{it, (usize) (m_AbsolutePath.end() - it)};
 				}
 				else if (*it == SK_PATH_SEPARATOR)
 				{
@@ -107,15 +107,15 @@ namespace Skore
 
 		void Append(const StringView& stringView)
 		{
-			m_absolutePath.Append(stringView);
+			m_AbsolutePath.Append(stringView);
 		}
 
 		BasicString<Type> Name() const
 		{
 			bool hasExtension = !Extension().Empty();
 
-			auto it = m_absolutePath.end();
-			if (it == m_absolutePath.begin()) return {};
+			auto it = m_AbsolutePath.end();
+			if (it == m_AbsolutePath.begin()) return {};
 			it--;
 
 			//if the last char is a separator
@@ -133,7 +133,7 @@ namespace Skore
 				found = true;
 			}
 
-			while (it != m_absolutePath.begin())
+			while (it != m_AbsolutePath.begin())
 			{
 				if (found && *it == SK_PATH_SEPARATOR)
 				{
@@ -149,23 +149,23 @@ namespace Skore
 				}
 				it--;
 			}
-			return m_absolutePath;
+			return m_AbsolutePath;
 		}
 
 		const String& GetString() const
 		{
-			return m_absolutePath;
+			return m_AbsolutePath;
 		}
 
 		inline decltype(auto) operator+=(const StringView& b)
 		{
-			m_absolutePath.Append(SK_PATH_SEPARATOR);
-			m_absolutePath.Append(b);
+			m_AbsolutePath.Append(SK_PATH_SEPARATOR);
+			m_AbsolutePath.Append(b);
 			return *this;
 		}
 
 	private:
-		BasicString<Type> m_absolutePath{};
+		BasicString<Type> m_AbsolutePath{};
 	};
 
 

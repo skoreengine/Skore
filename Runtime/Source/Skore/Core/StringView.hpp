@@ -72,104 +72,104 @@ namespace Skore
 
 		constexpr bool IsContained(Type ch, ConstIterator first, ConstIterator last) const;
 
-		const Type* m_str;
-		usize m_size;
+		const Type* m_Str;
+		usize m_Size;
 	};
 
 	template<typename Type>
-	constexpr BasicStringView<Type>::BasicStringView(const BasePath<Type>& path) : m_str(path.begin()), m_size(path.end() - path.begin())
+	constexpr BasicStringView<Type>::BasicStringView(const BasePath<Type>& path) : m_Str(path.begin()), m_Size(path.end() - path.begin())
 	{
 	}
 
 	template<typename Type>
-	constexpr BasicStringView<Type>::BasicStringView(const BasicString<Type>& string) : m_str(string.CStr()), m_size(string.Size())
+	constexpr BasicStringView<Type>::BasicStringView(const BasicString<Type>& string) : m_Str(string.CStr()), m_Size(string.Size())
 	{
 	}
 
 	template<typename Type>
-	constexpr BasicStringView<Type>::BasicStringView() : m_str(nullptr), m_size(0)
+	constexpr BasicStringView<Type>::BasicStringView() : m_Str(nullptr), m_Size(0)
 	{
 	}
 
 	template<typename Type>
-	constexpr BasicStringView<Type>::BasicStringView(const Type* s, usize count) : m_str(s), m_size(count)
+	constexpr BasicStringView<Type>::BasicStringView(const Type* s, usize count) : m_Str(s), m_Size(count)
 	{
 	}
 
 	template<typename Type>
-	constexpr BasicStringView<Type>::BasicStringView(const Type* s) : m_str(s), m_size(Strlen(s))
+	constexpr BasicStringView<Type>::BasicStringView(const Type* s) : m_Str(s), m_Size(Strlen(s))
 	{
 	}
 
 	template<typename Type>
 	constexpr const Type* BasicStringView<Type>::Data() const
 	{
-		return m_str;
+		return m_Str;
 	}
 
 	template<typename Type>
 	constexpr typename BasicStringView<Type>::ConstPointer BasicStringView<Type>::CStr() const
 	{
-		return m_str;
+		return m_Str;
 	}
 
 	template<typename Type>
 	constexpr char BasicStringView<Type>::operator[](usize pos) const
 	{
-		return m_str[pos];
+		return m_Str[pos];
 	}
 
 	template<typename Type>
 	constexpr usize BasicStringView<Type>::Size() const
 	{
-		return m_size;
+		return m_Size;
 	}
 
 	template<typename Type>
 	constexpr bool BasicStringView<Type>::Empty() const
 	{
-		return 0 == m_size;
+		return 0 == m_Size;
 	}
 
 	template<typename Type>
 	constexpr typename BasicStringView<Type>::Iterator BasicStringView<Type>::begin() const
 	{
-		return m_str;
+		return m_Str;
 	}
 
 	template<typename Type>
 	constexpr typename BasicStringView<Type>::ConstIterator BasicStringView<Type>::cbegin() const
 	{
-		return m_str;
+		return m_Str;
 	}
 
 	template<typename Type>
 	constexpr typename BasicStringView<Type>::Iterator BasicStringView<Type>::end() const
 	{
-		return m_str + m_size;
+		return m_Str + m_Size;
 	}
 
 	template<typename Type>
 	constexpr typename BasicStringView<Type>::ConstIterator BasicStringView<Type>::cend() const
 	{
-		return m_str + m_size;
+		return m_Str + m_Size;
 	}
 
 	template<typename Type>
 	constexpr BasicStringView<Type> BasicStringView<Type>::Substr(usize pos, usize count) const
 	{
-		return BasicStringView(m_str + pos, s_npos == count ? m_size - pos : count);
+		return BasicStringView(m_Str + pos, s_npos == count ? m_Size - pos : count);
 	}
 
 	template<typename Type>
 	constexpr void BasicStringView<Type>::Swap(BasicStringView<Type>& v)
 	{
-		Type* strtmp = m_str;
-		usize sizetmp = m_size;
-		m_str  = v.m_str;
-		m_size = v.m_size;
-		v.m_str  = strtmp;
-		v.m_size = sizetmp;
+		Type* strtmp = m_Str;
+		usize sizetmp = m_Size;
+		m_Str  = v.m_Str;
+		m_Size = v.m_Size;
+		v.m_Str  = strtmp;
+		v.m_Size = sizetmp;
 	}
 
 	template<typename Type>
@@ -192,7 +192,7 @@ namespace Skore
 			return false;
 		}
 		int ctr = 0;
-		while (this->m_str[ctr] == other.m_str[ctr])
+		while (this->m_Str[ctr] == other.m_Str[ctr])
 		{
 			if (this->Size() == ctr)
 			{
@@ -226,9 +226,9 @@ namespace Skore
 	template<typename Type>
 	constexpr usize BasicStringView<Type>::FindFirstOf(const Type* s, usize pos, usize n) const
 	{
-		for (usize i = pos; i != m_size; ++i)
+		for (usize i = pos; i != m_Size; ++i)
 		{
-			if (IsContained(m_str[i], s, s + n))
+			if (IsContained(m_Str[i], s, s + n))
 			{
 				return i;
 			}
@@ -257,9 +257,9 @@ namespace Skore
 	template<typename Type>
 	constexpr usize BasicStringView<Type>::FindFirstNotOf(const Type* s, usize pos, usize n) const
 	{
-		for (usize i = pos; i != m_size; ++i)
+		for (usize i = pos; i != m_Size; ++i)
 		{
-			if (!IsContained(m_str[i], s, s + n))
+			if (!IsContained(m_Str[i], s, s + n))
 			{
 				return i;
 			}
@@ -284,12 +284,12 @@ namespace Skore
 	{
 		if (pos == s_npos)
 		{
-			pos = m_size - 1;
+			pos = m_Size - 1;
 		}
 
 		for (usize i = pos; i > 0; --i)
 		{
-			if (IsContained(m_str[i], s, s + n))
+			if (IsContained(m_Str[i], s, s + n))
 			{
 				return i;
 			}
@@ -308,7 +308,7 @@ namespace Skore
 	{
 		if (pos == s_npos)
 		{
-			pos = m_size - 1;
+			pos = m_Size - 1;
 		}
 
 		return FindLastNotOf(s, pos, Strlen(s));
@@ -319,7 +319,7 @@ namespace Skore
 	{
 		for (usize i = pos; i >= 0; --i)
 		{
-			if (!IsContained(m_str[i], s, s + n))
+			if (!IsContained(m_Str[i], s, s + n))
 			{
 				return i;
 			}

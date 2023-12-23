@@ -11,7 +11,7 @@ namespace Skore
 {
 	struct SK_API Allocator
 	{
-		CPtr alloc;
+		CPtr Alloc;
 		CPtr (*MemAlloc)(CPtr alloc, usize bytes);
 		void (*MemFree)(CPtr alloc, CPtr ptr, usize bytes);
 	};
@@ -22,7 +22,7 @@ namespace Skore
 	template<typename Type, typename ...Args>
 	static Type* Alloc(Args&& ...args)
 	{
-		auto ptr = static_cast<Type*>(GetDefaultAllocator()->MemAlloc(GetDefaultAllocator()->alloc, sizeof(Type)));
+		auto ptr = static_cast<Type*>(GetDefaultAllocator()->MemAlloc(GetDefaultAllocator()->Alloc, sizeof(Type)));
 		if constexpr (Traits::IsAggregate<Type>)
 		{
 			new(PlaceHolder(), ptr) Type{Traits::Forward<Args>(args)...};
@@ -38,7 +38,7 @@ namespace Skore
 	static void Destroy(Type * type)
 	{
 		type->~Type();
-		GetDefaultAllocator()->MemFree(GetDefaultAllocator()->alloc, type, sizeof(Type));
+		GetDefaultAllocator()->MemFree(GetDefaultAllocator()->Alloc, type, sizeof(Type));
 	}
 
 }

@@ -9,100 +9,100 @@ namespace Skore
 	template<typename Key, typename Value>
 	struct HashNode
 	{
-		const Key first;
-		Value     second;
+		const Key First;
+		Value     Second;
 
-		HashNode* next;
-		HashNode* prev;
+		HashNode* Next;
+		HashNode* Prev;
 	};
 
-	template<typename Node>
+	template<typename T>
 	struct HashIterator
 	{
-		Node* node{};
-		Node* operator->() const;
-		Node& operator*() const;
+		T* Node{};
+		T* operator->() const;
+		T& operator*() const;
 		explicit operator bool() const noexcept;
 	};
 
 
-	template<typename Node>
-	struct HashIterator<const Node>
+	template<typename T>
+	struct HashIterator<const T>
 	{
 		HashIterator() = default;
 
-		HashIterator(Node* other) : node(other)
+		HashIterator(T* other) : Node(other)
 		{
 		}
 
-		HashIterator(HashIterator<Node> other) : node(other.node)
+		HashIterator(HashIterator<T> other) : Node(other.Node)
 		{
 		}
 
-		Node* operator->() const;
-		Node& operator*() const;
+		T* operator->() const;
+		T& operator*() const;
 		explicit operator bool() const noexcept;
-		Node* node{};
+		T* Node{};
 	};
 
 	template<typename Node>
 	inline Node* HashIterator<Node>::operator->() const
 	{
-		return node;
+		return Node;
 	}
 
 	template<typename Node>
 	inline Node& HashIterator<Node>::operator*() const
 	{
-		return *node;
+		return *Node;
 	}
 	template<typename Node>
 	inline Node* HashIterator<const Node>::operator->() const
 	{
-		return node;
+		return Node;
 	}
 
 	template<typename Node>
 	inline Node& HashIterator<const Node>::operator*() const
 	{
-		return *node;
+		return *Node;
 	}
 
 	template<typename Node>
 	static inline void operator++(HashIterator<Node>& lhs)
 	{
-		lhs.node = lhs.node->next;
+		lhs.Node = lhs.Node->Next;
 	}
 
 	template<typename LNode, typename RNode>
 	static inline bool operator==(const HashIterator<LNode>& lhs, const HashIterator<RNode>& rhs)
 	{
-		return lhs.node == rhs.node;
+		return lhs.Node == rhs.Node;
 	}
 
 	template<typename LNode, typename RNode>
 	static inline bool operator!=(const HashIterator<LNode>& lhs, const HashIterator<RNode>& rhs)
 	{
-		return lhs.node != rhs.node;
+		return lhs.Node != rhs.Node;
 	}
 
 	template<typename Node>
 	HashIterator<Node>::operator bool() const noexcept
 	{
-		return node != nullptr;
+		return Node != nullptr;
 	}
 
 	template<typename Node>
 	HashIterator<const Node>::operator bool() const noexcept
 	{
-		return node != nullptr;
+		return Node != nullptr;
 	}
 
 	template<typename Key, typename Value>
 	static inline void HashNodeErase(const HashNode<Key, Value>* where, usize hash, HashNode<Key, Value>** buckets, usize sizeBuckets)
 	{
 		usize bucket = hash & (sizeBuckets - 1);
-		HashNode<Key, Value>* next = where->next;
+		HashNode<Key, Value>* next = where->Next;
 		for (; buckets[bucket] == where; --bucket)
 		{
 			buckets[bucket] = next;
@@ -112,14 +112,14 @@ namespace Skore
 			}
 		}
 
-		if (where->prev)
+		if (where->Prev)
 		{
-			where->prev->next = where->next;
+			where->Prev->Next = where->Next;
 		}
 
 		if (next)
 		{
-			next->prev = where->prev;
+			next->Prev = where->Prev;
 		}
 	}
 
@@ -129,13 +129,13 @@ namespace Skore
 	{
 		usize bucket = hash & (sizeBuckets - 1);
 		HashNode<Key, Value>* it = buckets[bucket + 1];
-		node->next = it;
+		node->Next = it;
 		if (it)
 		{
-			node->prev           = it->prev;
-			it->prev             = node;
-			if (node->prev)
-				node->prev->next = node;
+			node->Prev           = it->Prev;
+			it->Prev             = node;
+			if (node->Prev)
+				node->Prev->Next = node;
 		}
 		else
 		{
@@ -146,15 +146,15 @@ namespace Skore
 			}
 
 			HashNode<Key, Value>* prev = buckets[newBucket];
-			while (prev && prev->next)
+			while (prev && prev->Next)
 			{
-				prev = prev->next;
+				prev = prev->Next;
 			}
 
-			node->prev = prev;
+			node->Prev = prev;
 			if (prev)
 			{
-				prev->next = node;
+				prev->Next = node;
 			}
 		}
 

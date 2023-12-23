@@ -12,9 +12,9 @@ namespace Skore
 
 	struct LogContext
 	{
-		String                             buffer{4096};
-		HashMap<String, SharedPtr<Logger>> loggers{};
-		std::mutex                         mutex{};
+		String                             Buffer{4096};
+		HashMap<String, SharedPtr<Logger>> Loggers{};
+		std::mutex                         Mutex{};
 	};
 
 	LogContext& GetLoggerContext()
@@ -34,17 +34,17 @@ namespace Skore
 
 	Logger& Logger::GetLogger(const StringView& name, LogLevel logLevel)
 	{
-		auto it = GetLoggerContext().loggers.Find(name);
-		if (it == GetLoggerContext().loggers.end())
+		auto it = GetLoggerContext().Loggers.Find(name);
+		if (it == GetLoggerContext().Loggers.end())
 		{
-			it = GetLoggerContext().loggers.Insert(MakePair(String{name}, MakeShared<Logger>(name, logLevel))).first;
+			it = GetLoggerContext().Loggers.Insert(MakePair(String{name}, MakeShared<Logger>(name, logLevel))).First;
 		}
-		return *it->second;
+		return *it->Second;
 	}
 
 	void Logger::PrintLog(LogLevel logLevel, const StringView& message)
 	{
-		std::unique_lock<std::mutex> lock(GetLoggerContext().mutex);
+		std::unique_lock<std::mutex> lock(GetLoggerContext().Mutex);
 		const auto  now = std::chrono::system_clock::now();
 		std::time_t t   = std::chrono::system_clock::to_time_t(now);
 
@@ -59,28 +59,28 @@ namespace Skore
 			duration_cast<std::chrono::milliseconds>(std::chrono::duration_cast<std::chrono::seconds>(duration))).count();
 
 		LogContext& context = GetLoggerContext();
-		context.buffer.Clear();
+		context.Buffer.Clear();
 
-		context.buffer = "[";
-		context.buffer += buffer;
-		context.buffer += ".";
+		context.Buffer = "[";
+		context.Buffer += buffer;
+		context.Buffer += ".";
 		if (milliseconds < 100)
 		{
-			context.buffer += "0";
+			context.Buffer += "0";
 		}
 		if (milliseconds < 10)
 		{
-			context.buffer += "0";
+			context.Buffer += "0";
 		}
-		usize size = StringConverter<i64>::ToString(context.buffer.begin(), context.buffer.Size(), milliseconds);
-		context.buffer.SetSize(context.buffer.Size() + size);
-		context.buffer += "] [";
-		context.buffer += levelDesc[logLevel];
-		context.buffer += "] [";
-		context.buffer += m_name;
-		context.buffer += "] ";
-		context.buffer += message;
-		context.buffer += "\n";
-		Platform::ConsoleWrite(context.buffer);
+		usize size = StringConverter<i64>::ToString(context.Buffer.begin(), context.Buffer.Size(), milliseconds);
+		context.Buffer.SetSize(context.Buffer.Size() + size);
+		context.Buffer += "] [";
+		context.Buffer += levelDesc[logLevel];
+		context.Buffer += "] [";
+		context.Buffer += m_name;
+		context.Buffer += "] ";
+		context.Buffer += message;
+		context.Buffer += "\n";
+		Platform::ConsoleWrite(context.Buffer);
 	}
 }

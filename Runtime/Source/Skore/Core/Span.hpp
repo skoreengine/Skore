@@ -20,23 +20,26 @@ namespace Skore
 		typedef const T* ConstIterator;
 
 
-		Span() : m_first(0), m_last(0)
+		Span() : m_First(0), m_Last(0)
 		{}
 
 
-		Span(Array<T>& vec) : m_first(vec.Data()), m_last(vec.Data() + vec.Size())
+		Span(Array<T>& vec) : m_First(vec.Data()), m_Last(vec.Data() + vec.Size())
 		{
 		}
 
-		Span(const Array<T>& vec) : m_first((T*)vec.Data()), m_last((T*)vec.Data() + vec.Size())
+		Span(const Array<T>& vec) : m_First((T*)vec.Data()), m_Last((T*)vec.Data() + vec.Size())
 		{
 		}
 
-		Span(T* t) : m_first(t), m_last(t + 1)
+		Span(T* t) : m_First(t), m_Last(t + 1)
 		{
 		}
 
-		Span(T* m_First, T* m_Last) : m_first(m_First), m_last(m_Last)
+		Span(T* first, T* last) : m_First(first), m_Last(last)
+		{}
+
+		Span(T* first, usize size) : m_First(first), m_Last(first + size)
 		{}
 
 		constexpr const T* Data() const
@@ -46,22 +49,22 @@ namespace Skore
 
 		constexpr Iterator begin()
 		{
-			return m_first;
+			return m_First;
 		}
 
 		constexpr Iterator end()
 		{
-			return m_last;
+			return m_Last;
 		}
 
 		constexpr ConstIterator begin() const
 		{
-			return m_first;
+			return m_First;
 		}
 
 		constexpr ConstIterator end() const
 		{
-			return m_last;
+			return m_Last;
 		}
 
 		constexpr usize Size() const
@@ -95,8 +98,8 @@ namespace Skore
 		}
 
 	private:
-		T* m_first;
-		T* m_last;
+		T* m_First;
+		T* m_Last;
 	};
 
 }

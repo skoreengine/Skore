@@ -21,14 +21,14 @@ namespace Skore
 	class FunctionBaseImpl : public FunctionBase<Ret, Params...>
 	{
 	private:
-		Func m_func;
+		Func m_Func;
 	public:
 		template<typename Other>
-		FunctionBaseImpl(Other&& other) : m_func(Traits::Forward<Other>(other)) {}
+		FunctionBaseImpl(Other&& other) : m_Func(Traits::Forward<Other>(other)) {}
 
 		Ret Call(Params ...params) override
 		{
-			return m_func(Traits::Forward<Params>(params)...);
+			return m_Func(Traits::Forward<Params>(params)...);
 		}
 	};
 
@@ -38,23 +38,23 @@ namespace Skore
 	public:
 		Ret operator()(Params... params)
 		{
-			return m_funcBase->Call(Traits::Forward<Params>(params)...);
+			return m_FuncBase->Call(Traits::Forward<Params>(params)...);
 		}
 
 		bool IsEmpty() const
 		{
-			return m_funcBase == nullptr;
+			return m_FuncBase == nullptr;
 		}
 
 	protected:
 		template<typename Func>
 		void Set(Func&& func)
 		{
-			m_funcBase = MakeShared<FunctionBaseImpl<Traits::RemoveAll<Func>, Ret, Params...>>(Traits::Forward<Func>(func));
+			m_FuncBase = MakeShared<FunctionBaseImpl<Traits::RemoveAll<Func>, Ret, Params...>>(Traits::Forward<Func>(func));
 		}
 
 	private:
-		SharedPtr<FunctionBase<Ret, Params...>> m_funcBase{};
+		SharedPtr<FunctionBase<Ret, Params...>> m_FuncBase{};
 	};
 
 

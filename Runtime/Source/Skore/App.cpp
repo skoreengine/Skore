@@ -5,6 +5,7 @@
 #include "Skore/Platform/Platform.hpp"
 #include "Skore/Core/Logger.hpp"
 #include "Skore/Core/Reflection.hpp"
+#include "Skore/Render/Device/RenderDevice.hpp"
 
 namespace Skore
 {
@@ -12,22 +13,28 @@ namespace Skore
 	{
 		bool Running = false;
 		Window* Window = nullptr;
+		RenderSwapchain Swapchain{};
+		Vec4            ClearColor = Vec4{0, 0, 0, 1};
 		Logger& Logger = Logger::GetLogger("Skore::App");
 	};
 
 	AppContext app = {};
 
-	void App::Init()
+	void App::Init(const AppCreation& appCreation)
 	{
 		Platform::Init();
+		RenderDevice::Init(appCreation);
 
-		WindowCreation windowCreation{
-			.Title = "Skore",
-			.WindowFlags = WindowFlags_Maximized
-		};
+		WindowFlags flags = 0;
+		if (appCreation.Fullscreen)
+		{
+			flags |= WindowFlags_Maximized;
+		}
 
-		app.Window  = Platform::CreateWindow(windowCreation);
-		app.Running = true;
+		app.Window    = Platform::CreateWindow(appCreation.Title, appCreation.Size, flags);
+		app.Swapchain = RenderDevice::CreateSwapchain(app.Window, appCreation.Vsync);
+		app.Running   = true;
+
 		app.Logger.Info("Skore {} initialized ", SK_VERSION);
 	}
 
@@ -35,10 +42,34 @@ namespace Skore
 	{
 		Platform::ProcessEvents();
 
-		if (Platform::WindowUserRequestedClose(app.Window))
+		if (Platform::UserRequestedClose(app.Window))
 		{
 			app.Running = false;
 		}
+
+		Extent         extent = Platform::GetWindowExtent(app.Window);
+		RenderCommands cmd    = RenderDevice::BeginFrame();
+
+		RenderDevice::BeginRenderPass(cmd, BeginRenderPassInfo{
+			.Swapchain = app.Swapchain,
+			.ClearValues = {&app.ClearColor, 1}
+		});
+
+		ViewportInfo viewportInfo{};
+		viewportInfo.x        = 0.;
+		viewportInfo.y        = 0.;
+		viewportInfo.width    = (f32) extent.width;
+		viewportInfo.height   = (f32) extent.height;
+		viewportInfo.maxDepth = 0.;
+		viewportInfo.minDepth = 1.;
+		RenderDevice::SetViewport(cmd, viewportInfo);
+
+		auto scissor = Rect{0, 0, extent.width, extent.height};
+		RenderDevice::SetScissor(cmd, scissor);
+
+		RenderDevice::EndRenderPass(cmd);
+		RenderDevice::EndFrame(app.Swapchain);
+
 		return app.Running;
 	}
 

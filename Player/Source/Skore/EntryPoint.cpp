@@ -7,7 +7,11 @@ using namespace Skore;
 
 int main()
 {
-	App::Init();
+	App::Init(AppCreation{
+		.Title = "Skore"
+	});
+
+
 	while(App::Update()) {}
 	App::Shutdown();
 

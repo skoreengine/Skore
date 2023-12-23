@@ -98,25 +98,25 @@ namespace Skore
 				auto newSize = Size() + StringConverter<Type>::Size(value);
 				Resize(newSize);
 				StringConverter<Type>::ToString(begin() + initialSize, 0, value);
-				m_size = newSize | (m_size & c_longFlag);
+				m_Size = newSize | (m_Size & LongFlag);
 			}
 			return *this;
 		}
 
 	private:
-		static constexpr usize c_longFlag = ((usize) 1) << (sizeof(usize) * 8 - 1);
+		static constexpr usize LongFlag = ((usize) 1) << (sizeof(usize) * 8 - 1);
 
-		usize m_size;
+		usize m_Size;
 		union
 		{
 			struct
 			{
-				Pointer m_first;
-				Pointer m_capacity;
+				Pointer m_First;
+				Pointer m_Capacity;
 			};
-			Type m_buffer[SK_STRING_BUFFER_SIZE];
+			Type m_Buffer[SK_STRING_BUFFER_SIZE];
 		};
-		Allocator* m_allocator = GetDefaultAllocator();
+		Allocator* m_Allocator = GetDefaultAllocator();
 	};
 
 	template<typename T>
@@ -128,9 +128,9 @@ namespace Skore
 	{}
 
 	template<typename T>
-	SK_FINLINE BasicString<T>::BasicString(Allocator* allocator) : m_size(0), m_allocator(allocator)
+	SK_FINLINE BasicString<T>::BasicString(Allocator* allocator) : m_Size(0), m_Allocator(allocator)
 	{
-		m_buffer[0] = 0;
+		m_Buffer[0] = 0;
 	}
 
 	template<typename T>
@@ -140,36 +140,36 @@ namespace Skore
 	}
 
 	template<typename T>
-	SK_FINLINE BasicString<T>::BasicString(const BasicString& other) : m_size(0), m_allocator(other.m_allocator)
+	SK_FINLINE BasicString<T>::BasicString(const BasicString& other) : m_Size(0), m_Allocator(other.m_Allocator)
 	{
 		Assign(other);
 	}
 
 	template<typename T>
-	SK_FINLINE BasicString<T>::BasicString(const BasicStringView<T>& stringView, Allocator* allocator) : m_size(0), m_allocator(allocator)
+	SK_FINLINE BasicString<T>::BasicString(const BasicStringView<T>& stringView, Allocator* allocator) : m_Size(0), m_Allocator(allocator)
 	{
 		Assign(stringView.begin(), stringView.end());
 	}
 
 	template<typename T>
-	BasicString<T>::BasicString(BasicString&& other) noexcept : m_size(0)
+	BasicString<T>::BasicString(BasicString&& other) noexcept : m_Size(0)
 	{
-		m_size      = other.m_size;
-		m_allocator = other.m_allocator;
-		if (other.m_size & c_longFlag)
+		m_Size      = other.m_Size;
+		m_Allocator = other.m_Allocator;
+		if (other.m_Size & LongFlag)
 		{
-			m_capacity = other.m_capacity;
-			m_first    = other.m_first;
+			m_Capacity = other.m_Capacity;
+			m_First    = other.m_First;
 		}
 		else
 		{
 			for (i32 i             = 0; i < other.Size(); ++i)
 			{
-				m_buffer[i] = other[i];
+				m_Buffer[i] = other[i];
 			}
-			m_buffer[other.Size()] = 0;
+			m_Buffer[other.Size()] = 0;
 		}
-		other.m_size = 0;
+		other.m_Size = 0;
 	}
 
 	template<typename T>
@@ -185,19 +185,19 @@ namespace Skore
 	{}
 
 	template<typename T>
-	SK_FINLINE BasicString<T>::BasicString(ConstPointer sz, Allocator* allocator) : m_size(0), m_allocator(allocator)
+	SK_FINLINE BasicString<T>::BasicString(ConstPointer sz, Allocator* allocator) : m_Size(0), m_Allocator(allocator)
 	{
 		Assign(sz);
 	}
 
 	template<typename T>
-	SK_FINLINE BasicString<T>::BasicString(ConstPointer first, ConstPointer last, Allocator* allocator) : m_size(0), m_allocator(allocator)
+	SK_FINLINE BasicString<T>::BasicString(ConstPointer first, ConstPointer last, Allocator* allocator) : m_Size(0), m_Allocator(allocator)
 	{
 		Assign(first, last);
 	}
 
 	template<typename T>
-	SK_FINLINE BasicString<T>::BasicString(ConstPointer sz, usize len, Allocator* allocator) : m_size(0), m_allocator(allocator)
+	SK_FINLINE BasicString<T>::BasicString(ConstPointer sz, usize len, Allocator* allocator) : m_Size(0), m_Allocator(allocator)
 	{
 		Assign(sz, sz + len);
 	}
@@ -205,9 +205,9 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE BasicString<T>::~BasicString()
 	{
-		if (m_size & c_longFlag)
+		if (m_Size & LongFlag)
 		{
-			m_allocator->MemFree(m_allocator->alloc, m_first, m_capacity - m_first);
+			m_Allocator->MemFree(m_Allocator->Alloc, m_First, m_Capacity - m_First);
 		}
 	}
 
@@ -224,22 +224,22 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE BasicString<T>& BasicString<T>::operator=(BasicString&& other) noexcept
 	{
-		m_size = other.m_size;
+		m_Size = other.m_Size;
 
-		if (other.m_size & c_longFlag)
+		if (other.m_Size & LongFlag)
 		{
-			m_capacity = other.m_capacity;
-			m_first    = other.m_first;
+			m_Capacity = other.m_Capacity;
+			m_First    = other.m_First;
 		}
 		else
 		{
 			for (int i             = 0; i < other.Size(); ++i)
 			{
-				m_buffer[i] = other[i];
+				m_Buffer[i] = other[i];
 			}
-			m_buffer[other.Size()] = 0;
+			m_Buffer[other.Size()] = 0;
 		}
-		other.m_size = 0;
+		other.m_Size = 0;
 		return *this;
 	}
 
@@ -288,13 +288,13 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE typename BasicString<T>::ConstPointer BasicString<T>::CStr() const
 	{
-		if (m_size & c_longFlag)
+		if (m_Size & LongFlag)
 		{
-			return m_first;
+			return m_First;
 		}
 		else
 		{
-			return m_buffer;
+			return m_Buffer;
 		}
 	}
 
@@ -307,15 +307,15 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE usize BasicString<T>::Size() const
 	{
-		return m_size & ~c_longFlag;
+		return m_Size & ~LongFlag;
 	}
 
 	template<typename T>
 	SK_FINLINE usize BasicString<T>::Capacity() const
 	{
-		if (m_size & c_longFlag)
+		if (m_Size & LongFlag)
 		{
-			return m_capacity - m_first - 1;
+			return m_Capacity - m_First - 1;
 		}
 		else
 		{
@@ -326,52 +326,52 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE typename BasicString<T>::Iterator BasicString<T>::begin()
 	{
-		if (m_size & c_longFlag)
+		if (m_Size & LongFlag)
 		{
-			return m_first;
+			return m_First;
 		}
 		else
 		{
-			return m_buffer;
+			return m_Buffer;
 		}
 	}
 
 	template<typename T>
 	SK_FINLINE typename BasicString<T>::Iterator BasicString<T>::end()
 	{
-		if (m_size & c_longFlag)
+		if (m_Size & LongFlag)
 		{
-			return m_first + (m_size & ~c_longFlag);
+			return m_First + (m_Size & ~LongFlag);
 		}
 		else
 		{
-			return m_buffer + m_size;
+			return m_Buffer + m_Size;
 		}
 	}
 
 	template<typename T>
 	SK_FINLINE typename BasicString<T>::ConstIterator BasicString<T>::begin() const
 	{
-		if (m_size & c_longFlag)
+		if (m_Size & LongFlag)
 		{
-			return m_first;
+			return m_First;
 		}
 		else
 		{
-			return m_buffer;
+			return m_Buffer;
 		}
 	}
 
 	template<typename T>
 	SK_FINLINE typename BasicString<T>::ConstIterator BasicString<T>::end() const
 	{
-		if (m_size & c_longFlag)
+		if (m_Size & LongFlag)
 		{
-			return m_first + (m_size & ~c_longFlag);
+			return m_First + (m_Size & ~LongFlag);
 		}
 		else
 		{
-			return m_buffer + m_size;
+			return m_Buffer + m_Size;
 		}
 	}
 
@@ -409,23 +409,23 @@ namespace Skore
 			return;
 		}
 
-		auto         newFirst = (Pointer) m_allocator->MemAlloc(m_allocator->alloc, cap + 1);
+		auto         newFirst = (Pointer) m_Allocator->MemAlloc(m_Allocator->Alloc, cap + 1);
 		for (Pointer it       = begin(), newIt = newFirst, e = end() + 1; it != e; ++it, ++newIt)
 		{
 			*newIt = *it;
 		}
 
-		if (m_size & c_longFlag)
+		if (m_Size & LongFlag)
 		{
-			m_allocator->MemFree(m_allocator->alloc, m_first, m_capacity - m_first);
+			m_Allocator->MemFree(m_Allocator->Alloc, m_First, m_Capacity - m_First);
 		}
 		else
 		{
-			m_size |= c_longFlag;
+			m_Size |= LongFlag;
 		}
 
-		m_first    = newFirst;
-		m_capacity = m_first + cap + 1;
+		m_First    = newFirst;
+		m_Capacity = m_First + cap + 1;
 	}
 
 	template<typename T>
@@ -447,13 +447,13 @@ namespace Skore
 		}
 		Pointer it = begin() + n;
 		*it = 0;
-		m_size = n | (m_size & c_longFlag);
+		m_Size = n | (m_Size & LongFlag);
 	}
 
 	template<typename T>
 	void BasicString<T>::SetSize(usize s)
 	{
-		m_size = s | (m_size & c_longFlag);
+		m_Size = s | (m_Size & LongFlag);
 	}
 
 	template<typename T>
@@ -468,7 +468,7 @@ namespace Skore
 		Pointer it = begin();
 		*it       = ch;
 		*(it + 1) = 0;
-		m_size = 1 | (m_size & c_longFlag);
+		m_Size = 1 | (m_Size & LongFlag);
 	}
 
 	template<typename T>
@@ -495,7 +495,7 @@ namespace Skore
 			*newit = *it;
 		}
 		*newit                  = 0;
-		m_size = newsize | (m_size & c_longFlag);
+		m_Size = newsize | (m_Size & LongFlag);
 	}
 
 	template<typename T>
@@ -512,7 +512,7 @@ namespace Skore
 			Pointer it = end();
 			*it       = ch;
 			*(it + 1) = 0;
-			++m_size;
+			++m_Size;
 		}
 		else
 		{
@@ -547,7 +547,7 @@ namespace Skore
 		}
 
 		*newit = 0;
-		m_size = newsize | (m_size & c_longFlag);
+		m_Size = newsize | (m_Size & LongFlag);
 	}
 
 	template<typename T>
@@ -607,7 +607,7 @@ namespace Skore
 			*newIt = *it;
 		}
 
-		m_size = newSize | (m_size & c_longFlag);
+		m_Size = newSize | (m_Size & LongFlag);
 	}
 
 	template<typename T>
@@ -630,52 +630,52 @@ namespace Skore
 			*newIt = *it;
 		}
 		*newIt               = 0;
-		m_size = newSize | (m_size & c_longFlag);
+		m_Size = newSize | (m_Size & LongFlag);
 	}
 
 	template<typename T>
 	SK_FINLINE void BasicString<T>::Swap(BasicString& other)
 	{
-		const usize tsize = m_size;
+		const usize tsize = m_Size;
 		Pointer     tfirst, tcapacity;
 		Type        tbuffer[SK_STRING_BUFFER_SIZE]{};
 
-		if (tsize & c_longFlag)
+		if (tsize & LongFlag)
 		{
-			tfirst    = m_first;
-			tcapacity = m_capacity;
+			tfirst    = m_First;
+			tcapacity = m_Capacity;
 		}
 		else
 		{
-			for (Pointer it = m_buffer, newit = tbuffer, e = m_buffer + tsize + 1; it != e; ++it, ++newit)
+			for (Pointer it = m_Buffer, newit = tbuffer, e = m_Buffer + tsize + 1; it != e; ++it, ++newit)
 			{
 				*newit = *it;
 			}
 		}
 
-		m_size = other.m_size;
-		if (other.m_size & c_longFlag)
+		m_Size = other.m_Size;
+		if (other.m_Size & LongFlag)
 		{
-			m_first    = other.m_first;
-			m_capacity = other.m_capacity;
+			m_First    = other.m_First;
+			m_Capacity = other.m_Capacity;
 		}
 		else
 		{
-			for (Pointer it = other.m_buffer, newit = m_buffer, e = other.m_buffer + m_size + 1; it != e; ++it, ++newit)
+			for (Pointer it = other.m_Buffer, newit = m_Buffer, e = other.m_Buffer + m_Size + 1; it != e; ++it, ++newit)
 			{
 				*newit = *it;
 			}
 		}
 
-		other.m_size = tsize;
-		if (tsize & c_longFlag)
+		other.m_Size = tsize;
+		if (tsize & LongFlag)
 		{
-			other.m_first    = tfirst;
-			other.m_capacity = tcapacity;
+			other.m_First    = tfirst;
+			other.m_Capacity = tcapacity;
 		}
 		else
 		{
-			for (Pointer it = tbuffer, newit = other.m_buffer, e = tbuffer + tsize + 1; it != e; ++it, ++newit)
+			for (Pointer it = tbuffer, newit = other.m_Buffer, e = tbuffer + tsize + 1; it != e; ++it, ++newit)
 			{
 				*newit = *it;
 			}

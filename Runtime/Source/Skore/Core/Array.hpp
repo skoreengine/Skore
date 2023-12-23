@@ -68,52 +68,52 @@ namespace Skore
 
 		~Array();
 	private:
-		T* m_first{};
-		T* m_last{};
-		T* m_capacity{};
+		T* m_First{};
+		T* m_Last{};
+		T* m_Capacity{};
 
-		Allocator* m_allocator = GetDefaultAllocator();
+		Allocator* m_Allocator = GetDefaultAllocator();
 	};
 
 	template<typename T>
-	SK_FINLINE Array<T>::Array() : m_first(0), m_last(0), m_capacity(0)
+	SK_FINLINE Array<T>::Array() : m_First(0), m_Last(0), m_Capacity(0)
 	{
 	}
 
 	template<typename T>
-	SK_FINLINE Array<T>::Array(const Array& other) : m_first(0), m_last(0), m_capacity(0), m_allocator(other.m_allocator)
+	SK_FINLINE Array<T>::Array(const Array& other) : m_First(0), m_Last(0), m_Capacity(0), m_Allocator(other.m_Allocator)
 	{
 		Reserve(other.Size());
-		Insert(begin(), other.begin(), other.m_last);
+		Insert(begin(), other.begin(), other.m_Last);
 	}
 
 	template<typename T>
 	SK_FINLINE Array<T>::Array(Array&& other) noexcept
 	{
-		m_first     = other.m_first;
-		m_last      = other.m_last;
-		m_capacity  = other.m_capacity;
-		m_allocator = other.m_allocator;
+		m_First    = other.m_First;
+		m_Last           = other.m_Last;
+		m_Capacity  = other.m_Capacity;
+		m_Allocator = other.m_Allocator;
 
-		other.m_first    = nullptr;
-		other.m_last     = nullptr;
-		other.m_capacity = nullptr;
+		other.m_First    = nullptr;
+		other.m_Last     = nullptr;
+		other.m_Capacity = nullptr;
 	}
 
 	template<typename T>
-	SK_FINLINE Array<T>::Array(usize size) : m_first(0), m_last(0), m_capacity(0)
+	SK_FINLINE Array<T>::Array(usize size) : m_First(0), m_Last(0), m_Capacity(0)
 	{
 		Resize(size);
 	}
 
 	template<typename T>
-	SK_FINLINE Array<T>::Array(usize size, const T& value) : m_first(0), m_last(0), m_capacity(0)
+	SK_FINLINE Array<T>::Array(usize size, const T& value) : m_First(0), m_Last(0), m_Capacity(0)
 	{
 		Resize(size, value);
 	}
 
 	template<typename T>
-	SK_FINLINE Array<T>::Array(const T* first, const T* last) : m_first(0), m_last(0), m_capacity(0)
+	SK_FINLINE Array<T>::Array(const T* first, const T* last) : m_First(0), m_Last(0), m_Capacity(0)
 	{
 		Insert(begin(), first, last);
 	}
@@ -121,25 +121,25 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE Array<T>::Iterator Array<T>::begin()
 	{
-		return m_first;
+		return m_First;
 	}
 
 	template<typename T>
 	SK_FINLINE Array<T>::Iterator Array<T>::end()
 	{
-		return m_last;
+		return m_Last;
 	}
 
 	template<typename T>
 	SK_FINLINE Array<T>::ConstIterator Array<T>::begin() const
 	{
-		return m_first;
+		return m_First;
 	}
 
 	template<typename T>
 	SK_FINLINE Array<T>::ConstIterator Array<T>::end() const
 	{
-		return m_last;
+		return m_Last;
 	}
 
 	template<typename T>
@@ -154,14 +154,14 @@ namespace Skore
 	{
 		this->~Array();
 
-		m_first     = other.m_first;
-		m_last      = other.m_last;
-		m_capacity  = other.m_capacity;
-		m_allocator = other.m_allocator;
+		m_First    = other.m_First;
+		m_Last           = other.m_Last;
+		m_Capacity  = other.m_Capacity;
+		m_Allocator = other.m_Allocator;
 
-		other.m_first    = nullptr;
-		other.m_last     = nullptr;
-		other.m_capacity = nullptr;
+		other.m_First    = nullptr;
+		other.m_Last     = nullptr;
+		other.m_Capacity = nullptr;
 
 		return *this;
 	}
@@ -169,13 +169,13 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE T& Array<T>::operator[](usize idx)
 	{
-		return m_first[idx];
+		return m_First[idx];
 	}
 
 	template<typename T>
 	SK_FINLINE const T& Array<T>::operator[](usize idx) const
 	{
-		return m_first[idx];
+		return m_First[idx];
 	}
 
 	template<typename T>
@@ -201,68 +201,68 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE const T& Array<T>::Back() const
 	{
-		return m_last[-1];
+		return m_Last[-1];
 	}
 
 	template<typename T>
 	SK_FINLINE T& Array<T>::Back()
 	{
-		return m_last[-1];
+		return m_Last[-1];
 	}
 
 	template<typename T>
 	SK_FINLINE const T* Array<T>::Data() const
 	{
-		return m_first;
+		return m_First;
 	}
 
 	template<typename T>
 	SK_FINLINE T* Array<T>::Data()
 	{
-		return m_first;
+		return m_First;
 	}
 
 	template<typename T>
 	SK_FINLINE usize Array<T>::Size() const
 	{
-		return m_last - m_first;
+		return m_Last - m_First;
 	}
 
 	template<typename T>
 	SK_FINLINE usize Array<T>::Capacity() const
 	{
-		return m_capacity - m_first;
+		return m_Capacity - m_First;
 	}
 
 	template<typename T>
 	SK_FINLINE bool Array<T>::Empty() const
 	{
-		return m_last == m_first;
+		return m_Last == m_First;
 	}
 
 	template<typename T>
 	SK_FINLINE void Array<T>::Reserve(usize newCapacity)
 	{
-		if (m_first + newCapacity <= m_capacity)
+		if (m_First + newCapacity <= m_Capacity)
 		{
 			return;
 		}
 
-		const usize size = m_last - m_first;
-		T* newFirst = (T*) m_allocator->MemAlloc(m_allocator->alloc, sizeof(T) * newCapacity);
+		const usize size = m_Last - m_First;
+		T* newFirst = (T*) m_Allocator->MemAlloc(m_Allocator->Alloc, sizeof(T) * newCapacity);
 		T* dest = newFirst;
 
-		for (T* it = m_first; it != m_last; ++it, ++dest)
+		for (T* it = m_First; it != m_Last; ++it, ++dest)
 		{
 			new(PlaceHolder(), dest) T(Traits::Forward<T>(*it));
 			it->~T();
 		}
 
-		m_allocator->MemFree(m_allocator->alloc, m_first, sizeof(T) * ((char*) m_capacity - (char*) m_first));
+		m_Allocator->MemFree(m_Allocator->Alloc, m_First, sizeof(T) * ((char*) m_Capacity - (char*) m_First));
 
-		m_first    = newFirst;
-		m_last     = newFirst + size;
-		m_capacity = newFirst + newCapacity;
+		m_First    = newFirst;
+		m_Last     = newFirst + size;
+		m_Capacity = newFirst + newCapacity;
 	}
 
 	template<typename T>
@@ -270,17 +270,17 @@ namespace Skore
 	{
 		Reserve(size);
 
-		for (T* it = m_last; it < m_first + size; ++it)
+		for (T* it = m_Last; it < m_First + size; ++it)
 		{
 			new(PlaceHolder(), it) T();
 		}
 
-		for (T* it = m_first + size; it < m_last; ++it)
+		for (T* it = m_First + size; it < m_Last; ++it)
 		{
 			it->~T();
 		}
 
-		m_last = m_first + size;
+		m_Last = m_First + size;
 	}
 
 	template<typename T>
@@ -288,32 +288,32 @@ namespace Skore
 	{
 		Reserve(size);
 
-		for (T* it = m_last; it < m_first + size; ++it)
+		for (T* it = m_Last; it < m_First + size; ++it)
 		{
 			new(PlaceHolder(), it) T(value);
 		}
 
-		for (T* it = m_first + size; it < m_last; ++it)
+		for (T* it = m_First + size; it < m_Last; ++it)
 		{
 			it->~T();
 		}
 
-		m_last = m_first + size;
+		m_Last = m_First + size;
 	}
 
 	template<typename T>
 	template<typename... Args>
 	SK_FINLINE T& Array<T>::EmplaceBack(Args&& ... args)
 	{
-		T* where = m_last;
+		T* where = m_Last;
 
-		if (m_last == m_capacity)
+		if (m_Last == m_Capacity)
 		{
-			Reserve(((m_last - m_first) * 3 / 2) + 1);
-			where = m_first + (m_last - m_first);
+			Reserve(((m_Last - m_First) * 3 / 2) + 1);
+			where = m_First + (m_Last - m_First);
 		}
 
-		m_last++;
+		m_Last++;
 
 		if constexpr (Traits::IsAggregate<T>)
 		{
@@ -329,35 +329,35 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE void Array<T>::Clear()
 	{
-		for (T* it = m_first; it < m_last; ++it)
+		for (T* it = m_First; it < m_Last; ++it)
 		{
 			it->~T();
 		}
-		m_last = m_first;
+		m_Last = m_First;
 	}
 
 	template<typename T>
 	SK_FINLINE void Array<T>::PopBack()
 	{
-		T* where = m_last - 1;
+		T* where = m_Last - 1;
 		where->~T();
-		--m_last;
+		--m_Last;
 	}
 
 	template<typename T>
 	SK_FINLINE void Array<T>::Insert(Array::Iterator where, const T* first, const T* last)
 	{
-		const usize offset = where - m_first;
+		const usize offset = where - m_First;
 		const usize count = last - first;
-		const usize newSize = ((m_last - m_first) + count);
-		if (m_first + newSize >= m_capacity)
+		const usize newSize = ((m_Last - m_First) + count);
+		if (m_First + newSize >= m_Capacity)
 		{
 			Reserve((newSize * 3) / 2);
-			where = m_first + offset;
+			where = m_First + offset;
 		}
 
-		T* dest = m_first + newSize - 1;
-		for (T* it = m_last - 1; it >= where; --it, --dest)
+		T* dest = m_First + newSize - 1;
+		for (T* it = m_Last - 1; it >= where; --it, --dest)
 		{
 			new(PlaceHolder(), dest) T(Traits::Forward<T>(*it));
 		}
@@ -366,14 +366,14 @@ namespace Skore
 		{
 			new(PlaceHolder(), where) T(*first);
 		}
-		m_last = m_first + newSize;
+		m_Last = m_First + newSize;
 	}
 
 	template<typename T>
 	void Array<T>::Assign(const T* first, const T* last)
 	{
 		Clear();
-		Insert(m_last, first, last);
+		Insert(m_Last, first, last);
 	}
 
 	template<typename T>
@@ -387,42 +387,42 @@ namespace Skore
 		}
 
 		T* it  = last;
-		T* end = m_last;
+		T* end = m_Last;
 
 		for (T* dest = first; it != end; ++it, ++dest)
 		{
 			new(PlaceHolder(), dest) T(Traits::Forward<T>(*it));
 		}
 
-		m_last -= count;
+		m_Last -= count;
 	}
 
 	template<typename T>
 	SK_FINLINE void Array<T>::ShrinkToFit()
 	{
-		if (m_capacity != m_last)
+		if (m_Capacity != m_Last)
 		{
-			if (m_last == m_first)
+			if (m_Last == m_First)
 			{
-				m_allocator->MemFree(m_allocator->alloc, m_first, sizeof(T) * ((char*) m_capacity - (char*) m_first));
-				m_capacity = m_first = m_last = nullptr;
+				m_Allocator->MemFree(m_Allocator->Alloc, m_First, sizeof(T) * ((char*) m_Capacity - (char*) m_First));
+				m_Capacity = m_First = m_Last = nullptr;
 			}
 			else
 			{
-				const usize size = m_last - m_first;
-				T* newFirst = (T*) m_allocator->MemAlloc(m_allocator->alloc, sizeof(T) * size);
+				const usize size = m_Last - m_First;
+				T* newFirst = (T*) m_Allocator->MemAlloc(m_Allocator->Alloc, sizeof(T) * size);
 				T* dest     = newFirst;
 
-				for (T* it = m_first; it != m_last; ++it, ++dest)
+				for (T* it = m_First; it != m_Last; ++it, ++dest)
 				{
 					new(PlaceHolder(), dest) T(Traits::Forward<T>(*it));
 					it->~T();
 				}
 
-				m_allocator->MemFree(m_allocator->alloc, m_first, sizeof(T) * ((char*) m_capacity - (char*) m_first));
-				m_first    = newFirst;
-				m_last     = newFirst + size;
-				m_capacity = m_last;
+				m_Allocator->MemFree(m_Allocator->Alloc, m_First, sizeof(T) * ((char*) m_Capacity - (char*) m_First));
+				m_First    = newFirst;
+				m_Last     = newFirst + size;
+				m_Capacity = m_Last;
 			}
 		}
 	}
@@ -430,33 +430,33 @@ namespace Skore
 	template<typename T>
 	SK_FINLINE void Array<T>::Swap(Array& other)
 	{
-		T* first    = m_first;
-		T* last     = m_last;
-		T* capacity = m_capacity;
+		T* first    = m_First;
+		T* last           = m_Last;
+		T* capacity       = m_Capacity;
 
-		Allocator* allocator = m_allocator;
+		Allocator* allocator = m_Allocator;
 
-		m_first     = other.m_first;
-		m_last      = other.m_last;
-		m_capacity  = other.m_capacity;
-		m_allocator = other.m_allocator;
+		m_First    = other.m_First;
+		m_Last            = other.m_Last;
+		m_Capacity           = other.m_Capacity;
+		m_Allocator          = other.m_Allocator;
 
-		other.m_first    = first;
-		other.m_last     = last;
-		other.m_capacity = capacity;
-		other.m_allocator = allocator;
+		other.m_First    = first;
+		other.m_Last      = last;
+		other.m_Capacity     = capacity;
+		other.m_Allocator    = allocator;
 	}
 
 	template<typename T>
 	Array<T>::~Array()
 	{
-		if (m_first)
+		if (m_First)
 		{
-			for (auto it = m_first; it < m_last; ++it)
+			for (auto it = m_First; it < m_Last; ++it)
 			{
 				it->~T();
 			}
-			m_allocator->MemFree(m_allocator->alloc, m_first, sizeof(T) * ((char*) m_capacity - (char*) m_first));
+			m_Allocator->MemFree(m_Allocator->Alloc, m_First, sizeof(T) * ((char*) m_Capacity - (char*) m_First));
 		}
 	}
 

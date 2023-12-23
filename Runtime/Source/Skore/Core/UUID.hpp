@@ -16,18 +16,18 @@ namespace Skore
 	struct SK_API UUID
 	{
 
-		u64 firstValue;
-		u64 secondValue;
+		u64 FirstValue;
+		u64 SecondValue;
 
-		constexpr UUID() : firstValue(0), secondValue(0)
+		constexpr UUID() : FirstValue(0), SecondValue(0)
 		{}
 
-		constexpr UUID(u64 firstValue, u64 secondValue) : firstValue(firstValue), secondValue(secondValue)
+		constexpr UUID(u64 firstValue, u64 secondValue) : FirstValue(firstValue), SecondValue(secondValue)
 		{}
 
 		explicit operator bool() const noexcept
 		{
-			return this->firstValue != 0 || this->secondValue != 0;
+			return this->FirstValue != 0 || this->SecondValue != 0;
 		}
 
 		static constexpr UUID FromName(const char* string)
@@ -64,30 +64,30 @@ namespace Skore
 				{
 					case 0 :
 					{
-						uuid.firstValue = HexTo64(value);
-						uuid.firstValue <<= 16;
+						uuid.FirstValue = HexTo64(value);
+						uuid.FirstValue <<= 16;
 						break;
 					}
 					case 1 :
 					{
-						uuid.firstValue |= HexTo64(value);
-						uuid.firstValue <<= 16;
+						uuid.FirstValue |= HexTo64(value);
+						uuid.FirstValue <<= 16;
 						break;
 					}
 					case 2 :
 					{
-						uuid.firstValue |= HexTo64(value);
+						uuid.FirstValue |= HexTo64(value);
 						break;
 					}
 					case 3 :
 					{
-						uuid.secondValue = HexTo64(value);
-						uuid.secondValue <<= 48;
+						uuid.SecondValue = HexTo64(value);
+						uuid.SecondValue <<= 48;
 						break;
 					}
 					case 4 :
 					{
-						uuid.secondValue |= HexTo64(value);
+						uuid.SecondValue |= HexTo64(value);
 						break;
 					}
 					default:
@@ -101,7 +101,7 @@ namespace Skore
 
 		inline bool operator==(const UUID& uuid) const
 		{
-			return this->firstValue == uuid.firstValue && this->secondValue == uuid.secondValue;
+			return this->FirstValue == uuid.FirstValue && this->SecondValue == uuid.SecondValue;
 		}
 
 		inline bool operator!=(const UUID& uuid) const
@@ -119,8 +119,8 @@ namespace Skore
 		constexpr static bool HasHash = true;
 		constexpr static usize Value(const UUID& uuid)
 		{
-			auto result = (usize) (uuid.firstValue ^ (uuid.firstValue >> 32));
-			result = 31 * result + (i32) (uuid.secondValue ^ (uuid.secondValue >> 32));
+			auto result = (usize) (uuid.FirstValue ^ (uuid.FirstValue >> 32));
+			result = 31 * result + (i32) (uuid.SecondValue ^ (uuid.SecondValue >> 32));
 			return result;
 		}
 	};
@@ -145,7 +145,7 @@ namespace Skore
 
 		static usize ToString(char* buffer, usize pos, const UUID& value)
 		{
-			auto firstValue = value.firstValue;
+			auto firstValue = value.FirstValue;
 			i32 i = 17;
 			do
 			{
@@ -161,7 +161,7 @@ namespace Skore
 				i--;
 			} while (i > -1);
 			buffer[pos + 18] = '-';
-			auto secondValue = value.secondValue;
+			auto secondValue = value.SecondValue;
 			i = 35;
 			do
 			{

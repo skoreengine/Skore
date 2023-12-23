@@ -25,8 +25,8 @@ namespace Skore::Tests
 		}
 		{
 			UUID fromString = UUID::FromString("96ba841e-24f5-4622-8c09-bb7385580abb");
-			CHECK(fromString.firstValue > 0);
-			CHECK(fromString.secondValue > 0);
+			CHECK(fromString.FirstValue > 0);
+			CHECK(fromString.SecondValue > 0);
 
 			CHECK(HashValue(fromString) > 0);
 

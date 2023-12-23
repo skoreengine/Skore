@@ -59,7 +59,7 @@ namespace Skore
 			bool heapAllocated = size >= sizeof(logBuffer);
 			if (heapAllocated)
 			{
-				buffer = (char*) GetDefaultAllocator()->MemAlloc(GetDefaultAllocator()->alloc, size + 1);
+				buffer = (char*) GetDefaultAllocator()->MemAlloc(GetDefaultAllocator()->Alloc, size + 1);
 			}
 			else
 			{
@@ -73,7 +73,7 @@ namespace Skore
 
 			if (heapAllocated)
 			{
-				GetDefaultAllocator()->MemFree(GetDefaultAllocator()->alloc, buffer, size);
+				GetDefaultAllocator()->MemFree(GetDefaultAllocator()->Alloc, buffer, size);
 			}
 		}
 

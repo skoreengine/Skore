@@ -222,7 +222,7 @@ namespace Skore
 
 		static CPtr NewInstanceImpl(ConstructorHandler* handler, Allocator* allocator, CPtr* params)
 		{
-			CPtr ptr = allocator->MemAlloc(allocator->alloc, sizeof(Owner));
+			CPtr ptr = allocator->MemAlloc(allocator->Alloc, sizeof(Owner));
 			PlacementNewImpl(handler, ptr, params);
 			return ptr;
 		}
@@ -244,7 +244,7 @@ namespace Skore
 			{
 				static_cast<Type*>(instance)->~Type();
 			}
-			allocator->MemFree(allocator->alloc, instance, sizeof(Type));
+			allocator->MemFree(allocator->Alloc, instance, sizeof(Type));
 		}
 	};
 

@@ -61,7 +61,7 @@ void TestAllocatorMemFree(CPtr alloc, CPtr ptr, usize bytes)
 int main(int argc, char** argv)
 {
 	SetDefaultAllocator(Allocator{
-		.alloc = nullptr,
+		.Alloc = nullptr,
 		.MemAlloc = TestAllocatorMemAlloc,
 		.MemFree = TestAllocatorMemFree
 	});

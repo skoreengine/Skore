@@ -18,7 +18,7 @@ namespace Skore
 	}
 
 	Allocator allocator{
-		.alloc = nullptr,
+		.Alloc = nullptr,
 		.MemAlloc = DefaultAllocatorMemAlloc,
 		.MemFree = DefaultAllocatorMemFree
 	};

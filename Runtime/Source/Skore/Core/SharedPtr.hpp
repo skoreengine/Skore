@@ -34,8 +34,8 @@ namespace Skore
 				{
 					Allocator* allocator = GetDefaultAllocator();
 					m_instance->~Type();
-					allocator->MemFree(allocator->alloc, m_instance, sizeof(Traits::RemoveAll<Type>));
-					allocator->MemFree(allocator->alloc, m_references, sizeof(decltype(m_references)));
+					allocator->MemFree(allocator->Alloc, m_instance, sizeof(Traits::RemoveAll<Type>));
+					allocator->MemFree(allocator->Alloc, m_references, sizeof(decltype(m_references)));
 				}
 			}
 		}

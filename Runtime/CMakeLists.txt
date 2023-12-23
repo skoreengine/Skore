@@ -5,9 +5,15 @@ add_compile_definitions(SK_VERSION="Pre-Alpha.0.1.${TODAY}")
 
 
 file(GLOB_RECURSE SKORE_RUNTIME_SOURCES Source/*.hpp Source/*.cpp Source/*.h Source/*.c)
-add_library(SkoreRuntime SHARED ${SKORE_RUNTIME_SOURCES})
+
+file(GLOB_RECURSE SKORE_RUNTIME_THIRDPARTY_SOURCES
+				Thirdparty/glad/src/glad.c
+)
+
+add_library(SkoreRuntime SHARED ${SKORE_RUNTIME_SOURCES} ${SKORE_RUNTIME_THIRDPARTY_SOURCES})
 
 target_include_directories(SkoreRuntime PUBLIC Source)
+target_include_directories(SkoreRuntime PRIVATE Thirdparty/glad/include)
 
 target_link_libraries(SkoreRuntime PRIVATE glfw)
 

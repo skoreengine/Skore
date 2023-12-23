@@ -42,10 +42,10 @@ namespace Skore
 
 		if (it == m_constructors.end())
 		{
-			it = m_constructors.Emplace(constructorId, MakeShared<ConstructorHandler>()).first;
-			m_constructorArray.EmplaceBack(it->second.Get());
+			it = m_constructors.Emplace(constructorId, MakeShared<ConstructorHandler>()).First;
+			m_constructorArray.EmplaceBack(it->Second.Get());
 		}
-		return *it->second;
+		return *it->Second;
 	}
 
 	ConstructorHandler* TypeHandler::FindConstructor(TypeID* ids, usize size) const
@@ -53,7 +53,7 @@ namespace Skore
 		u64 constructorId = size > 0 ? MurmurHash64(ids, size * sizeof(TypeID), HashSeed64) : 0;
 		if (auto it = m_constructors.Find(constructorId))
 		{
-			return it->second.Get();
+			return it->Second.Get();
 		}
 		return nullptr;
 	}
@@ -68,17 +68,17 @@ namespace Skore
 		auto it = m_fields.Find(fieldName);
 		if (it == m_fields.end())
 		{
-			it = m_fields.Emplace(fieldName, MakeShared<FieldHandler>(fieldName)).first;
-			m_fieldArray.EmplaceBack(it->second.Get());
+			it = m_fields.Emplace(fieldName, MakeShared<FieldHandler>(fieldName)).First;
+			m_fieldArray.EmplaceBack(it->Second.Get());
 		}
-		return *it->second;
+		return *it->Second;
 	}
 
 	FieldHandler* TypeHandler::FindField(const StringView& fieldName) const
 	{
 		if (auto it = m_fields.Find(fieldName))
 		{
-			return it->second.Get();
+			return it->Second.Get();
 		}
 		return nullptr;
 	}
@@ -101,20 +101,20 @@ namespace Skore
 		auto itByName = reflection.typesByName.Find(name);
 		if (!itByName)
 		{
-			itByName = reflection.typesByName.Emplace(name, Array<SharedPtr<TypeHandler>>{}).first;
+			itByName = reflection.typesByName.Emplace(name, Array<SharedPtr<TypeHandler>>{}).First;
 		}
 
 		auto itById = reflection.typesByID.Find(typeInfo.typeId);
 		if (!itById)
 		{
-			itById = reflection.typesByID.Emplace(typeInfo.typeId, Array<SharedPtr<TypeHandler>>{}).first;
+			itById = reflection.typesByID.Emplace(typeInfo.typeId, Array<SharedPtr<TypeHandler>>{}).First;
 		}
 
-		usize version = itByName->second.Size() + 1;
+		usize version = itByName->Second.Size() + 1;
 		SharedPtr<TypeHandler> typeHandler = MakeShared<TypeHandler>(name, version);
 
-		itByName->second.EmplaceBack(typeHandler);
-		itById->second.EmplaceBack(typeHandler);
+		itByName->Second.EmplaceBack(typeHandler);
+		itById->Second.EmplaceBack(typeHandler);
 
 		reflection.logger.Debug("Type {} Registered ", name, version);
 
@@ -131,7 +131,7 @@ namespace Skore
 	{
 		if (auto it = reflection.typesByName.Find(name))
 		{
-			return it->second.Back().Get();
+			return it->Second.Back().Get();
 		}
 		return nullptr;
 	}
