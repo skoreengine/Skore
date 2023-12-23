@@ -1,8 +1,10 @@
+# Skore Game Engine
+
 [![Language](https://img.shields.io/badge/language-C++-blue.svg)](https://isocpp.org/)
 
 Skore is a work in progress 3D/2D game engine with focus on parallelism and high performance using data-oriented design and modern graphics techniques,
 source code is made based on c++ subset [Orthodox C++](https://gist.github.com/bkaradzic/2e39896bc7d8c34e042b)
----
+
 ## Principles
 - Data-oriented design.
 - Lightweight
