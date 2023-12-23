@@ -135,8 +135,8 @@ namespace Skore::Tests
 		Span<FieldHandler*> fields = testStruct->GetFields();
 		CHECK(fields.Size() == 3);
 
-		CHECK(GetTypeID<u32>() == uintField->GetFieldInfo().typeInfo.typeId);
-		CHECK(GetTypeID<String>() == stringField->GetFieldInfo().typeInfo.typeId);
+		CHECK(GetTypeID<u32>() == uintField->GetFieldInfo().TypeInfo.TypeId);
+		CHECK(GetTypeID<String>() == stringField->GetFieldInfo().TypeInfo.TypeId);
 
 		CPtr instance = testStruct->NewInstance();
 		REQUIRE(instance != nullptr);

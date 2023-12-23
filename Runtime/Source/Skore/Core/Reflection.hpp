@@ -18,23 +18,23 @@ namespace Skore
 
 	struct TypeInfo
 	{
-		TypeID typeId{};
+		TypeID TypeId{};
 	};
 
 	struct FieldInfo
 	{
-		TypeID   ownerId{};
-		bool     isConst{};
-		bool     isPointer{};
-		bool     isReference{};
-		TypeInfo typeInfo{};
+		TypeID   OwnerId{};
+		bool     IsConst{};
+		bool     IsPointer{};
+		bool     IsReference{};
+		TypeInfo TypeInfo{};
 	};
 
 	template<typename Type>
 	TypeInfo MakeTypeInfo()
 	{
 		return TypeInfo{
-			.typeId = GetTypeID<Type>()
+			.TypeId = GetTypeID<Type>()
 		};
 	}
 
@@ -42,11 +42,11 @@ namespace Skore
 	constexpr FieldInfo MakeFieldInfo()
 	{
 		return FieldInfo{
-			.ownerId = GetTypeID<Owner>(),
-			.isConst = false,
-			.isPointer  = false,
-			.isReference  = false,
-			.typeInfo = MakeTypeInfo<Field>()
+			.OwnerId = GetTypeID<Owner>(),
+			.IsConst = false,
+			.IsPointer  = false,
+			.IsReference  = false,
+			.TypeInfo = MakeTypeInfo<Field>()
 		};
 	}
 
@@ -59,9 +59,9 @@ namespace Skore
 		void SetFnGetValue(FnGetValue fnGetValue);
 		ConstCPtr GetValue();
 	private:
-		FnGetValue m_fnGetValue;
-		TypeID     m_typeId{};
-		usize      m_size{};
+		FnGetValue m_FnGetValue;
+		TypeID     m_TypeId{};
+		usize      m_Size{};
 	};
 
 	//type handlers
@@ -78,8 +78,8 @@ namespace Skore
 		CPtr NewInstance(Allocator* allocator, CPtr* params);
 
 	private:
-		PlacementNewFn m_placementNewFn;
-		NewInstanceFn  m_newInstanceFn;
+		PlacementNewFn m_PlacementNewFn;
+		NewInstanceFn  m_NewInstanceFn;
 	};
 
 	class SK_API FieldHandler
@@ -113,13 +113,13 @@ namespace Skore
 		void SetFnCopyValueTo(FnCopyValueTo fnCopyValueTo);
 		void SetFnSetValue(FnSetValue fnSetValue);
 	private:
-		String            m_name;
-		FnGetFieldInfo    m_fnGetFieldInfo;
-		FnGetFieldPointer m_fnGetFieldPointer;
-		FnCopyValueTo     m_fnCopyValueTo;
-		FnSetValue        m_fnSetValue;
+		String            m_Name;
+		FnGetFieldInfo    m_FnGetFieldInfo;
+		FnGetFieldPointer m_FnGetFieldPointer;
+		FnCopyValueTo     m_FnCopyValueTo;
+		FnSetValue        m_FnSetValue;
 
-		HashMap<TypeID, SharedPtr<AttributeHandler>> m_attributes{};
+		HashMap<TypeID, SharedPtr<AttributeHandler>> m_Attributes{};
 	};
 
 	class SK_API TypeHandler
@@ -169,15 +169,15 @@ namespace Skore
 		void Destroy(CPtr instance, Allocator* allocator = GetDefaultAllocator()) const;
 
 	private:
-		String    m_name{};
-		u32       m_version{};
-		DestroyFn m_destroyFn{};
+		String    m_Name{};
+		u32       m_Version{};
+		DestroyFn m_DestroyFn{};
 
-		HashMap<usize, SharedPtr<ConstructorHandler>> m_constructors;
-		Array<ConstructorHandler*> m_constructorArray;
+		HashMap<usize, SharedPtr<ConstructorHandler>> m_Constructors;
+		Array<ConstructorHandler*>                    m_ConstructorArray;
 
-		HashMap<String, SharedPtr<FieldHandler>> m_fields;
-		Array<FieldHandler*> m_fieldArray;
+		HashMap<String, SharedPtr<FieldHandler>> m_Fields;
+		Array<FieldHandler*>                     m_FieldArray;
 	};
 
 	//native impl
@@ -186,14 +186,14 @@ namespace Skore
 	class NativeConstructorHandler
 	{
 	public:
-		explicit NativeConstructorHandler(ConstructorHandler& constructorHandler) : m_constructorHandler(constructorHandler)
+		explicit NativeConstructorHandler(ConstructorHandler& constructorHandler) : m_ConstructorHandler(constructorHandler)
 		{
 			constructorHandler.SetNewInstanceFn(&NewInstanceImpl);
 			constructorHandler.SetPlacementNewFn(PlacementNewImpl);
 		}
 
 	private:
-		ConstructorHandler& m_constructorHandler;
+		ConstructorHandler& m_ConstructorHandler;
 
 		template<typename ...Vals>
 		static void Eval(CPtr memory, CPtr* params, Traits::IndexSequence<>, Vals&& ...vals)

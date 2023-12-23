@@ -12,38 +12,38 @@ namespace Skore
 {
 	struct ReflectionContext
 	{
-		HashMap<String, Array<SharedPtr<TypeHandler>>> typesByName{};
-		HashMap<TypeID, Array<SharedPtr<TypeHandler>>> typesByID{};
+		HashMap<String, Array<SharedPtr<TypeHandler>>> TypesByName{};
+		HashMap<TypeID, Array<SharedPtr<TypeHandler>>> TypesByID{};
 
-		Logger& logger = Logger::GetLogger("Reflection");
+		Logger& Logger = Logger::GetLogger("Reflection");
 
 		virtual ~ReflectionContext()
 		{
-			SK_ASSERT(typesByName.Empty(), "Was the Reflection::Shutdown called?");
-			SK_ASSERT(typesByID.Empty(), "Was the Reflection::Shutdown called?");
+			SK_ASSERT(TypesByName.Empty(), "Was the Reflection::Shutdown called?");
+			SK_ASSERT(TypesByID.Empty(), "Was the Reflection::Shutdown called?");
 		}
 	};
 
 	ReflectionContext reflection{};
 
-	TypeHandler::TypeHandler(const StringView& name, u32 version) : m_name(name), m_version(version)
+	TypeHandler::TypeHandler(const StringView& name, u32 version) : m_Name(name), m_Version(version)
 	{
 	}
 
 	void TypeHandler::SetDestroyFn(DestroyFn destroyFn)
 	{
-		m_destroyFn = destroyFn;
+		m_DestroyFn = destroyFn;
 	}
 
 	ConstructorHandler& TypeHandler::NewConstructor(TypeID* ids, usize size)
 	{
 		u64 constructorId = size > 0 ? MurmurHash64(ids, size * sizeof(TypeID), HashSeed64) : 0;
-		auto it = m_constructors.Find(constructorId);
+		auto it = m_Constructors.Find(constructorId);
 
-		if (it == m_constructors.end())
+		if (it == m_Constructors.end())
 		{
-			it = m_constructors.Emplace(constructorId, MakeShared<ConstructorHandler>()).First;
-			m_constructorArray.EmplaceBack(it->Second.Get());
+			it = m_Constructors.Emplace(constructorId, MakeShared<ConstructorHandler>()).First;
+			m_ConstructorArray.EmplaceBack(it->Second.Get());
 		}
 		return *it->Second;
 	}
@@ -51,7 +51,7 @@ namespace Skore
 	ConstructorHandler* TypeHandler::FindConstructor(TypeID* ids, usize size) const
 	{
 		u64 constructorId = size > 0 ? MurmurHash64(ids, size * sizeof(TypeID), HashSeed64) : 0;
-		if (auto it = m_constructors.Find(constructorId))
+		if (auto it = m_Constructors.Find(constructorId))
 		{
 			return it->Second.Get();
 		}
@@ -60,23 +60,23 @@ namespace Skore
 
 	Span<ConstructorHandler*> TypeHandler::GetConstructors() const
 	{
-		return m_constructorArray;
+		return m_ConstructorArray;
 	}
 
 	FieldHandler& TypeHandler::NewField(const StringView& fieldName)
 	{
-		auto it = m_fields.Find(fieldName);
-		if (it == m_fields.end())
+		auto it = m_Fields.Find(fieldName);
+		if (it == m_Fields.end())
 		{
-			it = m_fields.Emplace(fieldName, MakeShared<FieldHandler>(fieldName)).First;
-			m_fieldArray.EmplaceBack(it->Second.Get());
+			it = m_Fields.Emplace(fieldName, MakeShared<FieldHandler>(fieldName)).First;
+			m_FieldArray.EmplaceBack(it->Second.Get());
 		}
 		return *it->Second;
 	}
 
 	FieldHandler* TypeHandler::FindField(const StringView& fieldName) const
 	{
-		if (auto it = m_fields.Find(fieldName))
+		if (auto it = m_Fields.Find(fieldName))
 		{
 			return it->Second.Get();
 		}
@@ -85,29 +85,29 @@ namespace Skore
 
 	Span<FieldHandler*> TypeHandler::GetFields() const
 	{
-		return m_fieldArray;
+		return m_FieldArray;
 	}
 
 	void TypeHandler::Destroy(CPtr instance, Allocator* allocator) const
 	{
-		if (m_destroyFn)
+		if (m_DestroyFn)
 		{
-			m_destroyFn(this, allocator, instance);
+			m_DestroyFn(this, allocator, instance);
 		}
 	}
 
 	TypeHandler& Reflection::NewType(const StringView& name, const TypeInfo& typeInfo)
 	{
-		auto itByName = reflection.typesByName.Find(name);
+		auto itByName = reflection.TypesByName.Find(name);
 		if (!itByName)
 		{
-			itByName = reflection.typesByName.Emplace(name, Array<SharedPtr<TypeHandler>>{}).First;
+			itByName = reflection.TypesByName.Emplace(name, Array<SharedPtr<TypeHandler>>{}).First;
 		}
 
-		auto itById = reflection.typesByID.Find(typeInfo.typeId);
+		auto itById = reflection.TypesByID.Find(typeInfo.TypeId);
 		if (!itById)
 		{
-			itById = reflection.typesByID.Emplace(typeInfo.typeId, Array<SharedPtr<TypeHandler>>{}).First;
+			itById = reflection.TypesByID.Emplace(typeInfo.TypeId, Array<SharedPtr<TypeHandler>>{}).First;
 		}
 
 		usize version = itByName->Second.Size() + 1;
@@ -116,20 +116,20 @@ namespace Skore
 		itByName->Second.EmplaceBack(typeHandler);
 		itById->Second.EmplaceBack(typeHandler);
 
-		reflection.logger.Debug("Type {} Registered ", name, version);
+		reflection.Logger.Debug("Type {} Registered ", name, version);
 
 		return *typeHandler;
 	}
 
 	void Reflection::Shutdown()
 	{
-		reflection.typesByID.Clear();
-		reflection.typesByName.Clear();
+		reflection.TypesByID.Clear();
+		reflection.TypesByName.Clear();
 	}
 
 	TypeHandler* Reflection::FindTypeByName(const StringView& name)
 	{
-		if (auto it = reflection.typesByName.Find(name))
+		if (auto it = reflection.TypesByName.Find(name))
 		{
 			return it->Second.Back().Get();
 		}
@@ -138,94 +138,94 @@ namespace Skore
 
 	void AttributeHandler::SetFnGetValue(AttributeHandler::FnGetValue fnGetValue)
 	{
-		m_fnGetValue = fnGetValue;
+		m_FnGetValue = fnGetValue;
 	}
 
 	ConstCPtr AttributeHandler::GetValue()
 	{
-		if (m_fnGetValue)
+		if (m_FnGetValue)
 		{
-			return m_fnGetValue(this);
+			return m_FnGetValue(this);
 		}
 		return nullptr;
 	}
 
-	AttributeHandler::AttributeHandler(TypeID typeId, usize size) : m_typeId(typeId), m_size(size)
+	AttributeHandler::AttributeHandler(TypeID typeId, usize size) : m_TypeId(typeId), m_Size(size)
 	{}
 
 	void ConstructorHandler::SetPlacementNewFn(ConstructorHandler::PlacementNewFn placementNewFn)
 	{
-		m_placementNewFn = placementNewFn;
+		m_PlacementNewFn = placementNewFn;
 	}
 
 	void ConstructorHandler::SetNewInstanceFn(ConstructorHandler::NewInstanceFn newInstanceFn)
 	{
-		m_newInstanceFn = newInstanceFn;
+		m_NewInstanceFn = newInstanceFn;
 	}
 
 	CPtr ConstructorHandler::NewInstance(Allocator* allocator, CPtr* params)
 	{
-		if (m_newInstanceFn)
+		if (m_NewInstanceFn)
 		{
-			return m_newInstanceFn(this, allocator, params);
+			return m_NewInstanceFn(this, allocator, params);
 		}
 		return nullptr;
 	}
 
-	FieldHandler::FieldHandler(const String& name) : m_name(name)
+	FieldHandler::FieldHandler(const String& name) : m_Name(name)
 	{}
 
 	void FieldHandler::SetFnGetFieldInfo(FnGetFieldInfo fieldInfoFn)
 	{
-		m_fnGetFieldInfo = fieldInfoFn;
+		m_FnGetFieldInfo = fieldInfoFn;
 	}
 
 	FieldInfo FieldHandler::GetFieldInfo() const
 	{
-		if (m_fnGetFieldInfo)
+		if (m_FnGetFieldInfo)
 		{
-			return m_fnGetFieldInfo(this);
+			return m_FnGetFieldInfo(this);
 		}
 		return {};
 	}
 
 	CPtr FieldHandler::GetFieldPointer(CPtr instance) const
 	{
-		if (m_fnGetFieldPointer)
+		if (m_FnGetFieldPointer)
 		{
-			return m_fnGetFieldPointer(this, instance);
+			return m_FnGetFieldPointer(this, instance);
 		}
 		return nullptr;
 	}
 
 	void FieldHandler::SetFnGetFieldPointer(FieldHandler::FnGetFieldPointer fnGetFieldPointer)
 	{
-		m_fnGetFieldPointer = fnGetFieldPointer;
+		m_FnGetFieldPointer = fnGetFieldPointer;
 	}
 
 	void FieldHandler::CopyValueTo(ConstCPtr instance, CPtr value)
 	{
-		if (m_fnCopyValueTo)
+		if (m_FnCopyValueTo)
 		{
-			m_fnCopyValueTo(this, instance, value);
+			m_FnCopyValueTo(this, instance, value);
 		}
 	}
 
 	void FieldHandler::SetValue(CPtr instance, ConstCPtr value)
 	{
-		if (m_fnSetValue)
+		if (m_FnSetValue)
 		{
-			m_fnSetValue(this, instance, value);
+			m_FnSetValue(this, instance, value);
 		}
 	}
 
 	void FieldHandler::SetFnCopyValueTo(FnCopyValueTo fnCopyValueTo)
 	{
-		m_fnCopyValueTo = fnCopyValueTo;
+		m_FnCopyValueTo = fnCopyValueTo;
 	}
 
 	void FieldHandler::SetFnSetValue(FnSetValue fnSetValue)
 	{
-		m_fnSetValue = fnSetValue;
+		m_FnSetValue = fnSetValue;
 	}
 }

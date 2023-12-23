@@ -16,76 +16,76 @@ namespace Skore
 	public:
 		using Base = Type;
 
-		PtrBase() : m_instance(nullptr), m_references(nullptr)
+		PtrBase() : m_Instance(nullptr), m_References(nullptr)
 		{
 		}
 
-		PtrBase(Type* instance, i32* references) : m_instance(instance), m_references(references)
+		PtrBase(Type* instance, i32* references) : m_Instance(instance), m_References(references)
 		{
-			*m_references = 1;
+			*m_References = 1;
 		}
 
 		virtual ~PtrBase() noexcept
 		{
-			if (m_references != nullptr)
+			if (m_References != nullptr)
 			{
-				*this->m_references = *this->m_references - 1;
-				if (*this->m_references <= 0)
+				*this->m_References = *this->m_References - 1;
+				if (*this->m_References <= 0)
 				{
 					Allocator* allocator = GetDefaultAllocator();
-					m_instance->~Type();
-					allocator->MemFree(allocator->Alloc, m_instance, sizeof(Traits::RemoveAll<Type>));
-					allocator->MemFree(allocator->Alloc, m_references, sizeof(decltype(m_references)));
+					m_Instance->~Type();
+					allocator->MemFree(allocator->Alloc, m_Instance, sizeof(Traits::RemoveAll<Type>));
+					allocator->MemFree(allocator->Alloc, m_References, sizeof(decltype(m_References)));
 				}
 			}
 		}
 
 		i32 RefCount() const
 		{
-			return *m_references;
+			return *m_References;
 		}
 
 	protected:
 		template<class Type2>
 		void MoveConstructorFrom(PtrBase<Type2>&& right) noexcept
 		{
-			this->m_instance   = right.m_instance;
-			this->m_references = right.m_references;
+			this->m_Instance   = right.m_Instance;
+			this->m_References = right.m_References;
 
-			right.m_references = nullptr;
-			right.m_instance   = nullptr;
+			right.m_References = nullptr;
+			right.m_Instance   = nullptr;
 		}
 
 		template<class Type2>
 		void CopyConstructorFrom(const PtrBase<Type2>& right)
 		{
-			this->m_instance   = right.m_instance;
-			this->m_references = right.m_references;
-			if (this->m_references != nullptr)
+			this->m_Instance   = right.m_Instance;
+			this->m_References = right.m_References;
+			if (this->m_References != nullptr)
 			{
-				*this->m_references = *this->m_references + 1;
+				*this->m_References = *this->m_References + 1;
 			}
 		}
 
 		template<class Type2>
 		void AliasConstructFrom(const PtrBase<Type2>& right, Type* p_instance)
 		{
-			this->m_instance   = p_instance;
-			this->m_references = right.m_references;
-			if (this->m_references != nullptr)
+			this->m_Instance   = p_instance;
+			this->m_References = right.m_References;
+			if (this->m_References != nullptr)
 			{
-				*this->m_references = *this->m_references + 1;
+				*this->m_References = *this->m_References + 1;
 			}
 		}
 
 		template<class Type2, typename Alloc2>
 		void AliasConstructFrom(PtrBase<Type2>&& right, Type* p_instance)
 		{
-			this->m_instance   = p_instance;
-			this->m_references = right.m_references;
+			this->m_Instance   = p_instance;
+			this->m_References = right.m_References;
 
-			right.m_references = nullptr;
-			right.m_instance   = nullptr;
+			right.m_References = nullptr;
+			right.m_Instance   = nullptr;
 		}
 
 	private:
@@ -97,8 +97,8 @@ namespace Skore
 		friend
 		class SharedPtr;
 
-		Type* m_instance;
-		i32 * m_references;
+		Type* m_Instance;
+		i32 * m_References;
 	};
 
 	template<typename Type>
@@ -167,17 +167,17 @@ namespace Skore
 
 		bool operator==(Traits::NullPtr) const noexcept
 		{
-			return this->m_instance == nullptr;
+			return this->m_Instance == nullptr;
 		}
 
 		bool operator!=(Traits::NullPtr) noexcept
 		{
-			return this->m_instance != nullptr;
+			return this->m_Instance != nullptr;
 		}
 
 		Type* Get() const noexcept
 		{
-			return this->m_instance;
+			return this->m_Instance;
 		}
 
 		Type& operator*() const noexcept
@@ -192,7 +192,7 @@ namespace Skore
 
 		explicit operator bool() const noexcept
 		{
-			return this->m_instance != nullptr;
+			return this->m_Instance != nullptr;
 		}
 	};
 
