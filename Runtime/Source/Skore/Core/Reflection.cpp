@@ -30,9 +30,14 @@ namespace Skore
 	{
 	}
 
-	void TypeHandler::SetDestroyFn(DestroyFn destroyFn)
+	void TypeHandler::SetFnDestroy(FnDestroy fnDestroy)
 	{
-		m_DestroyFn = destroyFn;
+		m_FnDestroy = fnDestroy;
+	}
+
+	void TypeHandler::SetFnCopy(FnCopy fnCopy)
+	{
+		m_FnCopy = fnCopy;
 	}
 
 	ConstructorHandler& TypeHandler::NewConstructor(TypeID* ids, usize size)
@@ -88,11 +93,38 @@ namespace Skore
 		return m_FieldArray;
 	}
 
+	FunctionHandler& TypeHandler::NewFunction(const FunctionHandlerCreation& creation)
+	{
+		auto it = m_Functions.Find(creation.Name);
+		if (it == m_Functions.end())
+		{
+			it = m_Functions.Emplace(String{creation.Name}, MakeShared<FunctionHandler>(creation)).First;
+		}
+		return *it->Second;
+	}
+
+	FunctionHandler* TypeHandler::FindFunction(const StringView& functionName) const
+	{
+		if (auto it = m_Functions.Find(functionName))
+		{
+			return it->Second.Get();
+		}
+		return nullptr;
+	}
+
 	void TypeHandler::Destroy(CPtr instance, Allocator* allocator) const
 	{
-		if (m_DestroyFn)
+		if (m_FnDestroy)
 		{
-			m_DestroyFn(this, allocator, instance);
+			m_FnDestroy(this, allocator, instance);
+		}
+	}
+
+	void TypeHandler::Copy(ConstCPtr source, CPtr dest) const
+	{
+		if (m_FnCopy)
+		{
+			m_FnCopy(this, source, dest);
 		}
 	}
 
@@ -130,6 +162,15 @@ namespace Skore
 	TypeHandler* Reflection::FindTypeByName(const StringView& name)
 	{
 		if (auto it = reflection.TypesByName.Find(name))
+		{
+			return it->Second.Back().Get();
+		}
+		return nullptr;
+	}
+
+	TypeHandler* Reflection::FindTypeById(TypeID typeId)
+	{
+		if (auto it = reflection.TypesByID.Find(typeId))
 		{
 			return it->Second.Back().Get();
 		}
@@ -227,5 +268,58 @@ namespace Skore
 	void FieldHandler::SetFnSetValue(FnSetValue fnSetValue)
 	{
 		m_FnSetValue = fnSetValue;
+	}
+
+	FunctionHandler::FunctionHandler(const FunctionHandlerCreation& creation) : m_Name(creation.Name), m_FunctionId(creation.FunctionId), m_Return(creation.Return)
+	{
+		//TODO SimpleName
+		for (int i = 0; i < creation.Params.Size(); ++i)
+		{
+			m_Params.EmplaceBack(i, creation.Params[i]);
+		}
+	}
+
+	StringView FunctionHandler::GetName() const
+	{
+		return m_Name;
+	}
+
+	Span<ParamHandler> FunctionHandler::GetParams() const
+	{
+		return m_Params;
+	}
+
+	FieldInfo FunctionHandler::GetReturn() const
+	{
+		return m_Return;
+	}
+
+	void FunctionHandler::SetFnCall(FnCall fnCall)
+	{
+		m_FnCall = fnCall;
+	}
+
+	void FunctionHandler::SetFunctionPointer(CPtr functionPointer)
+	{
+		m_FunctionPointer = functionPointer;
+	}
+
+	CPtr FunctionHandler::GetFunctionPointer() const
+	{
+		return m_FunctionPointer;
+	}
+
+	void FunctionHandler::Call(CPtr instance, CPtr ret, CPtr* params) const
+	{
+		if (m_FnCall)
+		{
+			m_FnCall(this, instance, ret, params);
+		}
+	}
+
+	ParamHandler::ParamHandler(usize index, const FieldInfo& fieldInfo) : m_FieldInfo(fieldInfo)
+	{
+		m_Name.Append("param_");
+		m_Name.Append(index);
 	}
 }

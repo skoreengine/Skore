@@ -31,7 +31,7 @@ namespace Skore
 	};
 
 	template<typename Type>
-	TypeInfo MakeTypeInfo()
+	constexpr TypeInfo MakeTypeInfo()
 	{
 		return TypeInfo{
 			.TypeId = GetTypeID<Type>()
@@ -50,6 +50,16 @@ namespace Skore
 		};
 	}
 
+	struct FunctionHandlerCreation
+	{
+		StringView            Name{};
+		TypeID                FunctionId{};
+		Span<const FieldInfo> Params{};
+		FieldInfo             Return{};
+	};
+
+	//type handlers
+
 	class SK_API AttributeHandler
 	{
 		typedef ConstCPtr(*FnGetValue)(AttributeHandler* handler);
@@ -64,7 +74,15 @@ namespace Skore
 		usize      m_Size{};
 	};
 
-	//type handlers
+	class SK_API ParamHandler
+	{
+	public:
+		ParamHandler(usize index, const FieldInfo& fieldInfo);
+	private:
+		FieldInfo m_FieldInfo{};
+		String m_Name{};
+	};
+
 
 	class SK_API ConstructorHandler
 	{
@@ -122,12 +140,41 @@ namespace Skore
 		HashMap<TypeID, SharedPtr<AttributeHandler>> m_Attributes{};
 	};
 
+	class SK_API FunctionHandler
+	{
+		typedef void(*FnCall)(const FunctionHandler* handler, CPtr instance, CPtr ret, CPtr* params);
+	public:
+		FunctionHandler(const FunctionHandlerCreation& creation);
+
+		StringView GetName() const;
+		Span<ParamHandler> GetParams() const;
+		FieldInfo GetReturn() const;
+
+		void SetFnCall(FnCall fnCall);
+		void SetFunctionPointer(CPtr functionPointer);
+
+		void Call(CPtr instance, CPtr ret, CPtr* params) const;
+
+		CPtr GetFunctionPointer() const;
+
+	private:
+		String              m_Name{};
+		String              m_SimpleName{};
+		TypeID              m_FunctionId{};
+		Array<ParamHandler> m_Params{};
+		FieldInfo           m_Return{};
+		FnCall              m_FnCall{};
+		CPtr                m_FunctionPointer{};
+	};
+
 	class SK_API TypeHandler
 	{
-		typedef void (*DestroyFn)(const TypeHandler* typeHandler, Allocator* allocator, CPtr instance);
+		typedef void (*FnDestroy)(const TypeHandler* typeHandler, Allocator* allocator, CPtr instance);
+		typedef void (*FnCopy)(const TypeHandler* typeHandler, ConstCPtr source, CPtr dest);
 	public:
 		TypeHandler(const StringView& name, u32 version);
-		void SetDestroyFn(DestroyFn destroyFn);
+		void SetFnDestroy(FnDestroy fnDestroy);
+		void SetFnCopy(FnCopy fnCopy);
 
 		ConstructorHandler& NewConstructor(TypeID* ids, usize size);
 		ConstructorHandler* FindConstructor(TypeID* ids, usize size) const;
@@ -137,6 +184,8 @@ namespace Skore
 		FieldHandler* FindField(const StringView& fieldName) const;
 		Span<FieldHandler*> GetFields() const;
 
+		FunctionHandler& NewFunction(const FunctionHandlerCreation& creation);
+		FunctionHandler* FindFunction(const StringView& functionName) const;
 
 		CPtr NewInstance(Allocator* allocator = GetDefaultAllocator()) const
 		{
@@ -167,17 +216,20 @@ namespace Skore
 		}
 
 		void Destroy(CPtr instance, Allocator* allocator = GetDefaultAllocator()) const;
+		void Copy(ConstCPtr source, CPtr dest) const;
 
 	private:
 		String    m_Name{};
 		u32       m_Version{};
-		DestroyFn m_DestroyFn{};
+		FnDestroy m_FnDestroy{};
+		FnCopy    m_FnCopy{};
 
 		HashMap<usize, SharedPtr<ConstructorHandler>> m_Constructors;
 		Array<ConstructorHandler*>                    m_ConstructorArray;
-
-		HashMap<String, SharedPtr<FieldHandler>> m_Fields;
-		Array<FieldHandler*>                     m_FieldArray;
+		HashMap<String, SharedPtr<FieldHandler>>      m_Fields;
+		Array<FieldHandler*>                          m_FieldArray;
+		HashMap<String, SharedPtr<FunctionHandler>>   m_Functions;
+		Array<FunctionHandler*>                       m_FunctionArray;
 	};
 
 	//native impl
@@ -233,6 +285,7 @@ namespace Skore
 	struct NativeTypeHandlerFuncs
 	{
 		static void DestroyImpl(const TypeHandler* typeHandler, Allocator* allocator, CPtr instance){};
+		static void CopyImpl(const TypeHandler* typeHandler, ConstCPtr source, CPtr dest) {};
 	};
 
 	template<typename Type>
@@ -246,13 +299,18 @@ namespace Skore
 			}
 			allocator->MemFree(allocator->Alloc, instance, sizeof(Type));
 		}
+
+		static void CopyImpl(const TypeHandler* typeHandler, ConstCPtr source, CPtr dest)
+		{
+			new(PlaceHolder(), dest) Type(*static_cast<const Type*>(source));
+		}
 	};
 
 	template<auto mfp, typename Owner, typename Field>
 	class NativeFieldHandler
 	{
 	public:
-		NativeFieldHandler(FieldHandler& fieldHandler) : m_fieldHandler(fieldHandler)
+		NativeFieldHandler(FieldHandler& fieldHandler) : m_FieldHandler(fieldHandler)
 		{
 			fieldHandler.SetFnGetFieldInfo(&GetFieldImpl);
 			fieldHandler.SetFnGetFieldPointer(&FnGetFieldPointerImpl);
@@ -261,7 +319,7 @@ namespace Skore
 		}
 
 	private:
-		FieldHandler& m_fieldHandler;
+		FieldHandler& m_FieldHandler;
 
 		static FieldInfo GetFieldImpl(const FieldHandler* fieldHandler)
 		{
@@ -304,40 +362,237 @@ namespace Skore
 		}
 	};
 
+
+	//function
+
+	template<auto fp, typename Return, typename ...Args>
+	class NativeFunctionHandler
+	{
+	public:
+		NativeFunctionHandler(FunctionHandler& functionHandler) : m_FunctionHandler(functionHandler)
+		{
+			m_FunctionHandler.SetFnCall(&CallImpl);
+			m_FunctionHandler.SetFunctionPointer(reinterpret_cast<CPtr>(&FunctionImpl));
+		}
+
+	private:
+		FunctionHandler& m_FunctionHandler;
+
+		static void CallImpl(const FunctionHandler* handler, CPtr instance, CPtr ret, CPtr* params)
+		{
+			u32 i{sizeof...(Args)};
+			if constexpr (Traits::IsSame<Return, void>)
+			{
+				fp(*static_cast<Traits::RemoveReference<Args>*>(params[--i])...);
+			}
+			else
+			{
+				*static_cast<Traits::RemoveReference<Return>*>(ret) = fp(*static_cast<Traits::RemoveReference<Args>*>(params[--i])...);
+			}
+		}
+
+		static Return FunctionImpl(const FunctionHandler* handler, CPtr instance, Args... args)
+		{
+			return fp(args...);
+		}
+	};
+
+
+	template<auto mfp, typename Return, typename Owner, typename ...Args>
+	class NativeMemberFunctionHandler
+	{
+	public:
+		NativeMemberFunctionHandler(FunctionHandler& functionHandler) : m_FunctionHandler(functionHandler)
+		{
+			m_FunctionHandler.SetFnCall(&CallImpl);
+			m_FunctionHandler.SetFunctionPointer(reinterpret_cast<CPtr>(&FunctionImpl));
+		}
+
+	private:
+		FunctionHandler& m_FunctionHandler;
+
+		static void CallImpl(const FunctionHandler* handler, CPtr instance, CPtr ret, CPtr* params)
+		{
+			u32 i{sizeof...(Args)};
+			if constexpr (Traits::IsSame<Return,void>)
+			{
+				(static_cast<Owner*>(instance)->*mfp)(*static_cast<Traits::RemoveReference<Args>*>(params[--i])...);
+			}
+			else
+			{
+				*static_cast<Traits::RemoveReference<Return>*>(ret) = (static_cast<Owner*>(instance)->*mfp)(*static_cast<Traits::RemoveReference<Args>*>(params[--i])...);
+			}
+		}
+
+		static Return FunctionImpl(const FunctionHandler* handler, CPtr instance, Args... args)
+		{
+			return (static_cast<Owner*>(instance)->*mfp)(args...);
+		}
+	};
+
+
+	template<auto func, typename Function>
+	struct MemberFunctionTemplateDecomposer
+	{
+	};
+
+	template<auto mfp, typename Return, typename Owner>
+	struct MemberFunctionTemplateDecomposer<mfp, Return(Owner::*)()>
+	{
+		using FuncType = MemberFunctionTemplateDecomposer<mfp, Return(Owner::*)()>;
+
+		static decltype(auto) CreateHandler(FunctionHandler& functionHandler)
+		{
+			return NativeMemberFunctionHandler<mfp, Return, Owner>(functionHandler);
+		}
+
+		static FunctionHandlerCreation MakeCreation(const StringView& name)
+		{
+			return FunctionHandlerCreation{
+				.Name = name,
+				.FunctionId = GetTypeID<FuncType>(),
+				.Return = MakeFieldInfo<Owner, Return>()
+			};
+		}
+	};
+
+	template<auto mfp, typename Return, typename Owner, typename ...Args>
+	struct MemberFunctionTemplateDecomposer<mfp, Return(Owner::*)(Args...)>
+	{
+		using FuncType = MemberFunctionTemplateDecomposer<mfp, Return(Owner::*)()>;
+		static constexpr FieldInfo Params[] = {MakeFieldInfo<Owner, Args>()...};
+
+		static decltype(auto) CreateHandler(FunctionHandler& functionHandler)
+		{
+			return NativeMemberFunctionHandler<mfp, Return, Owner, Args...>(functionHandler);
+		}
+
+		static FunctionHandlerCreation MakeCreation(const StringView& name)
+		{
+			return FunctionHandlerCreation{
+				.Name = name,
+				.FunctionId = GetTypeID<FuncType>(),
+			 	.Params = {Params, sizeof...(Args)},
+				.Return = MakeFieldInfo<Owner, Return>()
+			};
+		}
+	};
+
+	template<auto fp, typename Return>
+	struct MemberFunctionTemplateDecomposer<fp, Return(*)()>
+	{
+		using FuncType = MemberFunctionTemplateDecomposer<fp, Return(*)()>;
+
+		static decltype(auto) CreateHandler(FunctionHandler& functionHandler)
+		{
+			return NativeFunctionHandler<fp, Return>(functionHandler);
+		}
+
+		static FunctionHandlerCreation MakeCreation(const StringView& name)
+		{
+			return FunctionHandlerCreation{
+				.Name = name,
+				.FunctionId = GetTypeID<FuncType>(),
+				.Return = MakeFieldInfo<void, Return>()
+			};
+		}
+	};
+
+	template<auto fp, typename Return, typename ...Args>
+	struct MemberFunctionTemplateDecomposer<fp, Return(*)(Args...)>
+	{
+		using FuncType = MemberFunctionTemplateDecomposer<fp, Return(*)(Args...)>;
+		static constexpr FieldInfo Params[] = {MakeFieldInfo<void, Args>()...};
+
+		static decltype(auto) CreateHandler(FunctionHandler& functionHandler)
+		{
+			return NativeFunctionHandler<fp, Return, Args...>(functionHandler);
+		}
+
+		static FunctionHandlerCreation MakeCreation(const StringView& name)
+		{
+			return FunctionHandlerCreation{
+				.Name = name,
+				.FunctionId = GetTypeID<FuncType>(),
+				.Params = {Params, sizeof...(Args)},
+				.Return = MakeFieldInfo<void, Return>()
+			};
+		}
+	};
+	//type
+
+
 	template<typename Type>
 	class NativeTypeHandler
 	{
 	public:
-		explicit NativeTypeHandler(TypeHandler& typeHandler) : m_typeHandler(typeHandler)
+		explicit NativeTypeHandler(TypeHandler& typeHandler) : m_TypeHandler(typeHandler)
 		{
 			if constexpr (Traits::IsDirectConstructible<Type>)
 			{
 				this->Constructor();
 			}
-			typeHandler.SetDestroyFn(&NativeTypeHandlerFuncs<Type>::DestroyImpl);
+			typeHandler.SetFnDestroy(&NativeTypeHandlerFuncs<Type>::DestroyImpl);
+			typeHandler.SetFnCopy(&NativeTypeHandlerFuncs<Type>::CopyImpl);
 		}
 
 		inline auto Constructor()
 		{
-			return NativeConstructorHandler<Type>(m_typeHandler.NewConstructor(nullptr, 0));
+			return NativeConstructorHandler<Type>(m_TypeHandler.NewConstructor(nullptr, 0));
 		}
 
 		template<typename ...Args>
 		inline auto Constructor()
 		{
 			TypeID ids[] = {GetTypeID<Args>()...,};
-			return NativeConstructorHandler<Type, Args...>(m_typeHandler.NewConstructor(ids, sizeof...(Args)));
+			return NativeConstructorHandler<Type, Args...>(m_TypeHandler.NewConstructor(ids, sizeof...(Args)));
 		}
 
 		template<auto mfp>
 		inline auto Field(const StringView& name)
 		{
 			using FieldDecomp = FieldTemplateDecomposer<mfp, decltype(mfp)>;
-			return FieldDecomp::CreateHandler(m_typeHandler.NewField(name));
+			return FieldDecomp::CreateHandler(m_TypeHandler.NewField(name));
+		}
+
+		template<auto mfp>
+		inline auto Function(const StringView& name)
+		{
+			using FuncType = Traits::RemoveConstFunc<decltype(mfp)>;
+			using DecompType = MemberFunctionTemplateDecomposer<mfp, FuncType>;
+			return DecompType::CreateHandler(m_TypeHandler.NewFunction(DecompType::MakeCreation(name)));
 		}
 
 	private:
-		TypeHandler& m_typeHandler;
+		TypeHandler& m_TypeHandler;
+	};
+
+
+	class RuntimeFieldHandler
+	{
+	public:
+		explicit RuntimeFieldHandler(FieldHandler& fieldHandler) : m_FieldHandler(fieldHandler)
+		{
+
+		}
+	private:
+		FieldHandler& m_FieldHandler;
+	};
+
+	class RuntimeTypeHandler
+	{
+	public:
+		explicit RuntimeTypeHandler(TypeHandler& typeHandler) : m_TypeHandler(typeHandler)
+		{
+		}
+
+		inline auto Field(const StringView& name, TypeID typeId)
+		{
+			return RuntimeFieldHandler(m_TypeHandler.NewField(name));
+		}
+
+	private:
+		TypeHandler& m_TypeHandler;
 	};
 
 	namespace Reflection
@@ -347,11 +602,26 @@ namespace Skore
 
 		SK_API TypeHandler& NewType(const StringView& name, const TypeInfo& typeInfo);
 		SK_API TypeHandler* FindTypeByName(const StringView& name);
+		SK_API TypeHandler* FindTypeById(TypeID typeId);
 
 		template<typename T>
-		SK_API decltype(auto) Type()
+		SK_API TypeHandler* FindType()
+		{
+			return FindTypeById(GetTypeID<T>());
+		}
+
+
+		template<typename T>
+		SK_API inline decltype(auto) Type()
 		{
 			return NativeTypeHandler<T>(NewType(GetTypeName<T>(), MakeTypeInfo<T>()));
+		}
+
+		SK_API inline decltype(auto) Type(const StringView& name, TypeID typeId)
+		{
+			return RuntimeTypeHandler(NewType(name, TypeInfo{
+				.TypeId = typeId
+			}));
 		}
 	}
 }

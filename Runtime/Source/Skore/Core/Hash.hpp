@@ -218,6 +218,21 @@ namespace Skore
 		}
 	};
 
+	template<auto T>
+	struct Hash<char[T]>
+	{
+		constexpr static bool HasHash = true;
+		constexpr static usize Value(const char ch[T])
+		{
+			usize hash = 0;
+			for (i32 i = 0; i < T; ++i)
+			{
+				hash = ch[i] + (hash << 6) + (hash << 16) - hash;
+			}
+			return hash;
+		}
+	};
+
 	template<typename TValue>
 	constexpr inline usize HashValue(const TValue& value)
 	{

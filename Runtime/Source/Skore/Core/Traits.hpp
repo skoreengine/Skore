@@ -157,4 +157,23 @@ namespace Skore::Traits
 		typedef void type;
 	};
 	template<typename... Ts> using VoidType = typename MakeVoid<Ts...>::type;
+
+
+	template<typename Function>
+	struct RemoveConstFuncImpl
+	{
+		using Type = Function;
+	};
+
+	template<typename Return, typename Owner, typename ...Args>
+	struct RemoveConstFuncImpl<Return(Owner::*)(Args...) const>
+	{
+		using Type = Return(Owner::*)(Args...);
+	};
+
+	template<typename Function>
+	using RemoveConstFunc = typename RemoveConstFuncImpl<Function>::Type;
+
+	template<typename T1, typename T2>
+	constexpr bool IsSame = std::is_same_v<T1, T2>;
 }
