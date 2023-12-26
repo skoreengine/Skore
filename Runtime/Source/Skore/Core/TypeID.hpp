@@ -55,4 +55,14 @@ namespace Skore
 		return Internal::GetTypeName<Traits::RemoveAll<Type>>();
 	}
 
+	template<typename Type>
+	constexpr static usize GetTypeSize()
+	{
+		if constexpr (Traits::IsComplete<Traits::RemoveAll<Type>>)
+		{
+			return sizeof(Traits::RemoveAll<Type>);
+		}
+		return 0;
+	}
+
 }

@@ -99,6 +99,7 @@ namespace Skore
 		if (it == m_Functions.end())
 		{
 			it = m_Functions.Emplace(String{creation.Name}, MakeShared<FunctionHandler>(creation)).First;
+			m_FunctionArray.EmplaceBack(it->Second.Get());
 		}
 		return *it->Second;
 	}
@@ -110,6 +111,22 @@ namespace Skore
 			return it->Second.Get();
 		}
 		return nullptr;
+	}
+
+	Span<FunctionHandler*> TypeHandler::GetFunctions() const
+	{
+		return m_FunctionArray;
+	}
+
+	AttributeHandler& TypeHandler::NewAttribute(TypeID attributeId)
+	{
+		auto it = m_Attributes.Find(attributeId);
+		if (it == m_Attributes.end())
+		{
+			it = m_Attributes.Emplace(attributeId, MakeShared<AttributeHandler>()).First;
+			m_AttributeArray.EmplaceBack(it->Second.Get());
+		}
+		return *it->Second;
 	}
 
 	void TypeHandler::Destroy(CPtr instance, Allocator* allocator) const
@@ -126,6 +143,15 @@ namespace Skore
 		{
 			m_FnCopy(this, source, dest);
 		}
+	}
+
+	ConstCPtr TypeHandler::GetAttribute(TypeID attributeId) const
+	{
+		if (auto it = m_Attributes.Find(attributeId))
+		{
+			return it->Second->GetValue();
+		}
+		return nullptr;
 	}
 
 	TypeHandler& Reflection::NewType(const StringView& name, const TypeInfo& typeInfo)
@@ -190,9 +216,6 @@ namespace Skore
 		}
 		return nullptr;
 	}
-
-	AttributeHandler::AttributeHandler(TypeID typeId, usize size) : m_TypeId(typeId), m_Size(size)
-	{}
 
 	void ConstructorHandler::SetPlacementNewFn(ConstructorHandler::PlacementNewFn placementNewFn)
 	{
@@ -315,6 +338,26 @@ namespace Skore
 		{
 			m_FnCall(this, instance, ret, params);
 		}
+	}
+
+	AttributeHandler& FunctionHandler::NewAttribute(TypeID attributeId)
+	{
+		auto it = m_Attributes.Find(attributeId);
+		if (it == m_Attributes.end())
+		{
+			it = m_Attributes.Emplace(attributeId, MakeShared<AttributeHandler>()).First;
+			m_AttributeArray.EmplaceBack(it->Second.Get());
+		}
+		return *it->Second;
+	}
+
+	ConstCPtr FunctionHandler::GetAttribute(TypeID attributeId) const
+	{
+		if (auto it = m_Attributes.Find(attributeId))
+		{
+			return it->Second->GetValue();
+		}
+		return nullptr;
 	}
 
 	ParamHandler::ParamHandler(usize index, const FieldInfo& fieldInfo) : m_FieldInfo(fieldInfo)

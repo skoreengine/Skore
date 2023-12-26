@@ -176,4 +176,16 @@ namespace Skore::Traits
 
 	template<typename T1, typename T2>
 	constexpr bool IsSame = std::is_same_v<T1, T2>;
+
+	template<typename T, typename Enabler = void>
+	struct IsCompleteImpl : std::false_type
+	{
+	};
+
+	template<typename T>
+	struct IsCompleteImpl<T, Traits::VoidType<decltype(sizeof(T) != 0)>> : std::true_type
+	{
+	};
+	template<typename Type>
+	constexpr bool IsComplete = IsCompleteImpl<Type>::value;
 }

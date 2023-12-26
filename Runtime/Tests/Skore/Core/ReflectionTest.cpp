@@ -8,7 +8,7 @@
 namespace Skore::Tests
 {
 
-	struct ImcompleteType;
+	struct IncompleteType;
 
 	struct ReflectionTestStruct
 	{
@@ -17,47 +17,57 @@ namespace Skore::Tests
 		String String;
 	};
 
+	struct TestAttribute
+	{
+		i32 Value{};
+	};
+
+	struct OtherTestAttribute
+	{
+		String Value{};
+	};
+
 	class ReflectionTestClass
 	{
 	public:
 
-		static i32 constructorCalls;
-		static i32 destructorCalls;
+		static i32 ConstructorCalls;
+		static i32 DestructorCalls;
 
-		ReflectionTestClass() : m_int(10), m_string("Empty")
+		ReflectionTestClass() : m_Int(10), m_String("Empty")
 		{
-			constructorCalls++;
+			ConstructorCalls++;
 		}
 
-		ReflectionTestClass(i32 anInt, const String& string) : m_int(anInt), m_string(string)
+		ReflectionTestClass(i32 anInt, const String& string) : m_Int(anInt), m_String(string)
 		{
-			constructorCalls++;
+			ConstructorCalls++;
 		}
 
 		virtual ~ReflectionTestClass()
 		{
-			destructorCalls++;
+			DestructorCalls++;
 		}
 
 		i32 GetInt() const
 		{
-			return m_int;
+			return m_Int;
 		}
 
 		const String& GetString() const
 		{
-			return m_string;
+			return m_String;
 		}
 
 		static void ResetCount()
 		{
-			constructorCalls = 0;
-			destructorCalls = 0;
+			ConstructorCalls = 0;
+			DestructorCalls  = 0;
 		}
 
 	private:
-		i32 m_int;
-		String m_string;
+		i32    m_Int;
+		String m_String;
 	};
 
 	struct ReflectionFunctions
@@ -89,8 +99,8 @@ namespace Skore::Tests
 
 	};
 
-	i32 ReflectionTestClass::constructorCalls = 0;
-	i32 ReflectionTestClass::destructorCalls = 0;
+	i32 ReflectionTestClass::ConstructorCalls    = 0;
+	i32 ReflectionTestClass::DestructorCalls     = 0;
 	i32 ReflectionFunctions::StaticVoidFuncCalls = 0;
 
 	void TestTypeRegister()
@@ -104,16 +114,23 @@ namespace Skore::Tests
 
 	TEST_CASE("Core::ReflectionBasics")
 	{
-		Reflection::Type<ImcompleteType>();
+		Reflection::Type<IncompleteType>().Attribute<TestAttribute>(20);
+
 		auto typeClass = Reflection::Type<ReflectionTestClass>();
 		typeClass.Constructor<i32, String>();
+		typeClass.Attribute<TestAttribute>(10);
+
+		TypeHandler* incompleteType = Reflection::FindTypeByName("Skore::Tests::IncompleteType");
+		CHECK(incompleteType->GetAttribute<TestAttribute>()->Value == 20);
 
 		TypeHandler* testClass = Reflection::FindTypeByName("Skore::Tests::ReflectionTestClass");
 		REQUIRE(testClass != nullptr);
 
+		CHECK(testClass->GetAttribute<TestAttribute>()->Value == 10);
+
 		{
 			CPtr instance = testClass->NewInstance(123, String{"TestStr"});
-			CHECK(ReflectionTestClass::constructorCalls == 1);
+			CHECK(ReflectionTestClass::ConstructorCalls == 1);
 			REQUIRE(instance != nullptr);
 
 			ReflectionTestClass& test = *static_cast<ReflectionTestClass*>(instance);
@@ -121,14 +138,14 @@ namespace Skore::Tests
 			CHECK(test.GetString() == "TestStr");
 
 			testClass->Destroy(instance);
-			CHECK(ReflectionTestClass::destructorCalls == 1);
+			CHECK(ReflectionTestClass::DestructorCalls == 1);
 
 			ReflectionTestClass::ResetCount();
 		}
 
 		{
 			CPtr instance = testClass->NewInstance();
-			CHECK(ReflectionTestClass::constructorCalls == 1);
+			CHECK(ReflectionTestClass::ConstructorCalls == 1);
 			REQUIRE(instance != nullptr);
 
 			ReflectionTestClass& test = *static_cast<ReflectionTestClass*>(instance);
@@ -136,7 +153,7 @@ namespace Skore::Tests
 			CHECK(test.GetString() == "Empty");
 
 			testClass->Destroy(instance);
-			CHECK(ReflectionTestClass::destructorCalls == 1);
+			CHECK(ReflectionTestClass::DestructorCalls == 1);
 			ReflectionTestClass::ResetCount();
 		}
 
@@ -190,8 +207,8 @@ namespace Skore::Tests
 	{
 		{
 			auto reflectionFunctions = Reflection::Type<ReflectionFunctions>();
-			reflectionFunctions.Function<&ReflectionFunctions::VoidFunc>("VoidFunc");
-			reflectionFunctions.Function<&ReflectionFunctions::ParamsRetFunc>("ParamsRetFunc");
+			reflectionFunctions.Function<&ReflectionFunctions::VoidFunc>("VoidFunc").Attribute<TestAttribute>(101).Attribute<OtherTestAttribute>("Test");
+			reflectionFunctions.Function<&ReflectionFunctions::ParamsRetFunc>("ParamsRetFunc").Attribute<TestAttribute>(202);
 			reflectionFunctions.Function<&ReflectionFunctions::StaticFunc>("StaticFunc");
 			reflectionFunctions.Function<&ReflectionFunctions::StaticFuncNoParam>("StaticFuncNoParam");
 		}
@@ -204,6 +221,8 @@ namespace Skore::Tests
 		CHECK(voidFunc->GetName() == "VoidFunc");
 		CHECK(voidFunc->GetParams().Empty());
 		CHECK(voidFunc->GetReturn().TypeInfo.TypeId == GetTypeID<void>());
+		CHECK(voidFunc->GetAttribute<TestAttribute>()->Value == 101);
+		CHECK(voidFunc->GetAttribute<OtherTestAttribute>()->Value == "Test");
 
 		ReflectionFunctions reflectionFunctions{};
 		voidFunc->Call(&reflectionFunctions, nullptr, nullptr);
@@ -218,6 +237,8 @@ namespace Skore::Tests
 		REQUIRE(paramRetFunc != nullptr);
 		CHECK(paramRetFunc->GetReturn().TypeInfo.TypeId == GetTypeID<i32>());
 		CHECK(!paramRetFunc->GetParams().Empty());
+		CHECK(paramRetFunc->GetAttribute<TestAttribute>()->Value == 202);
+		CHECK(paramRetFunc->GetAttribute<OtherTestAttribute>() == nullptr);
 
 		{
 			i32 ret = 0;
@@ -228,7 +249,6 @@ namespace Skore::Tests
 			CHECK(reflectionFunctions.Calls == 3);
 			CHECK(ret == 30);
 		}
-
 
 		FunctionHandler* staticFunc = handler->FindFunction("StaticFunc");
 		REQUIRE(staticFunc != nullptr);

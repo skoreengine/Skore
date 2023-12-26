@@ -19,6 +19,7 @@ namespace Skore
 	struct TypeInfo
 	{
 		TypeID TypeId{};
+		usize  Size{};
 	};
 
 	struct FieldInfo
@@ -34,7 +35,8 @@ namespace Skore
 	constexpr TypeInfo MakeTypeInfo()
 	{
 		return TypeInfo{
-			.TypeId = GetTypeID<Type>()
+			.TypeId = GetTypeID<Type>(),
+			.Size = GetTypeSize<Type>()
 		};
 	}
 
@@ -62,16 +64,12 @@ namespace Skore
 
 	class SK_API AttributeHandler
 	{
-		typedef ConstCPtr(*FnGetValue)(AttributeHandler* handler);
+		typedef ConstCPtr(*FnGetValue)(const AttributeHandler* handler);
 	public:
-		AttributeHandler(TypeID typeId, usize size);
-
 		void SetFnGetValue(FnGetValue fnGetValue);
 		ConstCPtr GetValue();
 	private:
 		FnGetValue m_FnGetValue;
-		TypeID     m_TypeId{};
-		usize      m_Size{};
 	};
 
 	class SK_API ParamHandler
@@ -82,7 +80,6 @@ namespace Skore
 		FieldInfo m_FieldInfo{};
 		String m_Name{};
 	};
-
 
 	class SK_API ConstructorHandler
 	{
@@ -157,6 +154,15 @@ namespace Skore
 
 		CPtr GetFunctionPointer() const;
 
+		AttributeHandler& NewAttribute(TypeID attributeId);
+		ConstCPtr GetAttribute(TypeID attributeId) const;
+
+		template<typename AttType>
+		const AttType* GetAttribute() const
+		{
+			return static_cast<const AttType*>(GetAttribute(GetTypeID<AttType>()));
+		}
+
 	private:
 		String              m_Name{};
 		String              m_SimpleName{};
@@ -165,6 +171,9 @@ namespace Skore
 		FieldInfo           m_Return{};
 		FnCall              m_FnCall{};
 		CPtr                m_FunctionPointer{};
+
+		HashMap<TypeID, SharedPtr<AttributeHandler>> m_Attributes;
+		Array<AttributeHandler*>                     m_AttributeArray;
 	};
 
 	class SK_API TypeHandler
@@ -186,6 +195,11 @@ namespace Skore
 
 		FunctionHandler& NewFunction(const FunctionHandlerCreation& creation);
 		FunctionHandler* FindFunction(const StringView& functionName) const;
+		Span<FunctionHandler*> GetFunctions() const;
+
+		AttributeHandler& NewAttribute(TypeID attributeId);
+		ConstCPtr GetAttribute(TypeID attributeId) const;
+
 
 		CPtr NewInstance(Allocator* allocator = GetDefaultAllocator()) const
 		{
@@ -215,6 +229,12 @@ namespace Skore
 			return NewInstance(GetDefaultAllocator(), Traits::Forward<Args>(args)...);
 		}
 
+		template<typename AttType>
+		const AttType* GetAttribute() const
+		{
+			return static_cast<const AttType*>(GetAttribute(GetTypeID<AttType>()));
+		}
+
 		void Destroy(CPtr instance, Allocator* allocator = GetDefaultAllocator()) const;
 		void Copy(ConstCPtr source, CPtr dest) const;
 
@@ -230,9 +250,32 @@ namespace Skore
 		Array<FieldHandler*>                          m_FieldArray;
 		HashMap<String, SharedPtr<FunctionHandler>>   m_Functions;
 		Array<FunctionHandler*>                       m_FunctionArray;
+		HashMap<TypeID, SharedPtr<AttributeHandler>>  m_Attributes;
+		Array<AttributeHandler*>                      m_AttributeArray;
 	};
 
 	//native impl
+
+	template<typename Owner, typename Type>
+	class NativeAttributeHandler
+	{
+	public:
+		inline static Type Value{};
+
+		NativeAttributeHandler(AttributeHandler& attributeHandler) : m_AttributeHandler(attributeHandler)
+		{
+			attributeHandler.SetFnGetValue(&GetValueImpl);
+		}
+
+	private:
+		AttributeHandler& m_AttributeHandler;
+
+		static ConstCPtr GetValueImpl(const AttributeHandler* handler)
+		{
+			return &Value;
+		}
+	};
+
 
 	template<typename Owner, typename ...Args>
 	class NativeConstructorHandler
@@ -375,6 +418,14 @@ namespace Skore
 			m_FunctionHandler.SetFunctionPointer(reinterpret_cast<CPtr>(&FunctionImpl));
 		}
 
+		template<typename TypeAttr, typename ...AttrArgs>
+		inline auto Attribute(AttrArgs&& ... args)
+		{
+			NativeAttributeHandler<decltype(*this), TypeAttr>::Value = TypeAttr{Traits::Forward<AttrArgs>(args)...};
+			NativeAttributeHandler<decltype(*this), TypeAttr>(m_FunctionHandler.NewAttribute(GetTypeID<TypeAttr>()));
+			return *this;
+		}
+
 	private:
 		FunctionHandler& m_FunctionHandler;
 
@@ -406,6 +457,14 @@ namespace Skore
 		{
 			m_FunctionHandler.SetFnCall(&CallImpl);
 			m_FunctionHandler.SetFunctionPointer(reinterpret_cast<CPtr>(&FunctionImpl));
+		}
+
+		template<typename TypeAttr, typename ...AttrArgs>
+		inline auto Attribute(AttrArgs&& ... args)
+		{
+			NativeAttributeHandler<decltype(*this), TypeAttr>::Value = TypeAttr{Traits::Forward<AttrArgs>(args)...};
+			NativeAttributeHandler<decltype(*this), TypeAttr>(m_FunctionHandler.NewAttribute(GetTypeID<TypeAttr>()));
+			return *this;
 		}
 
 	private:
@@ -563,6 +622,14 @@ namespace Skore
 			return DecompType::CreateHandler(m_TypeHandler.NewFunction(DecompType::MakeCreation(name)));
 		}
 
+		template<typename TypeAttr, typename ...Args>
+		inline auto Attribute(Args&& ... args)
+		{
+			NativeAttributeHandler<Type, TypeAttr>::Value = TypeAttr{Traits::Forward<Args>(args)...};
+			NativeAttributeHandler<Type, TypeAttr>(m_TypeHandler.NewAttribute(GetTypeID<TypeAttr>()));
+			return *this;
+		}
+
 	private:
 		TypeHandler& m_TypeHandler;
 	};
@@ -609,7 +676,6 @@ namespace Skore
 		{
 			return FindTypeById(GetTypeID<T>());
 		}
-
 
 		template<typename T>
 		SK_API inline decltype(auto) Type()
