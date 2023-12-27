@@ -6,7 +6,7 @@
 #include "Skore/Defines.hpp"
 #include "StringView.hpp"
 #include "String.hpp"
-#include "TypeID.hpp"
+#include "TypeInfo.hpp"
 #include "Array.hpp"
 #include "SharedPtr.hpp"
 #include "HashMap.hpp"
@@ -14,13 +14,8 @@
 
 namespace Skore
 {
-	class TypeHandler;
 
-	struct TypeInfo
-	{
-		TypeID TypeId{};
-		usize  Size{};
-	};
+	class TypeHandler;
 
 	struct FieldInfo
 	{
@@ -31,15 +26,6 @@ namespace Skore
 		TypeInfo TypeInfo{};
 	};
 
-	template<typename Type>
-	constexpr TypeInfo MakeTypeInfo()
-	{
-		return TypeInfo{
-			.TypeId = GetTypeID<Type>(),
-			.Size = GetTypeSize<Type>()
-		};
-	}
-
 	template<typename Owner, typename Field>
 	constexpr FieldInfo MakeFieldInfo()
 	{
@@ -48,7 +34,7 @@ namespace Skore
 			.IsConst = false,
 			.IsPointer  = false,
 			.IsReference  = false,
-			.TypeInfo = MakeTypeInfo<Field>()
+			.TypeInfo = GetTypeInfo<Field>()
 		};
 	}
 
@@ -651,6 +637,7 @@ namespace Skore
 	public:
 		explicit RuntimeTypeHandler(TypeHandler& typeHandler) : m_TypeHandler(typeHandler)
 		{
+
 		}
 
 		inline auto Field(const StringView& name, TypeID typeId)
@@ -680,7 +667,7 @@ namespace Skore
 		template<typename T>
 		SK_API inline decltype(auto) Type()
 		{
-			return NativeTypeHandler<T>(NewType(GetTypeName<T>(), MakeTypeInfo<T>()));
+			return NativeTypeHandler<T>(NewType(GetTypeName<T>(), GetTypeInfo<T>()));
 		}
 
 		SK_API inline decltype(auto) Type(const StringView& name, TypeID typeId)

@@ -6,6 +6,7 @@
 #include "Skore/Core/Logger.hpp"
 #include "Skore/Core/Reflection.hpp"
 #include "Skore/Render/Device/RenderDevice.hpp"
+#include "Skore/Repository/Repository.hpp"
 
 namespace Skore
 {
@@ -23,6 +24,7 @@ namespace Skore
 	void App::Init(const AppCreation& appCreation)
 	{
 		Platform::Init();
+		Repository::Init();
 		RenderDevice::Init(appCreation);
 
 		WindowFlags flags = 0;
@@ -77,6 +79,7 @@ namespace Skore
 	{
 		Platform::DestroyWindow(app.Window);
 		Platform::Shutdown();
+		Repository::Shutdown();
 		Reflection::Shutdown();
 	}
 }

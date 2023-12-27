@@ -270,4 +270,13 @@ namespace Skore::Tests
 
 		Reflection::Shutdown();
 	}
+
+	TEST_CASE("Core::ReflectionRuntimeTypes")
+	{
+		//TODO
+		constexpr TypeID RuntimeTestTypeId = HashValue("Skore::Tests::RuntimeTestType");
+		auto runtimeType = Reflection::Type("Skore::Tests::RuntimeTestType", RuntimeTestTypeId);
+		runtimeType.Field("Value", GetTypeID<i32>());
+
+	}
 }

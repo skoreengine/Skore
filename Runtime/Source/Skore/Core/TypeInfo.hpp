@@ -11,6 +11,12 @@
 namespace Skore
 {
 
+	struct TypeInfo
+	{
+		TypeID TypeId{};
+		usize  Size{};
+	};
+
 	namespace Internal
 	{
 		template<typename Type>
@@ -63,6 +69,15 @@ namespace Skore
 			return sizeof(Traits::RemoveAll<Type>);
 		}
 		return 0;
+	}
+
+	template<typename Type>
+	constexpr TypeInfo GetTypeInfo()
+	{
+		return TypeInfo{
+			.TypeId = GetTypeID<Type>(),
+			.Size = GetTypeSize<Type>()
+		};
 	}
 
 }
