@@ -6,6 +6,8 @@
 #include "Skore/Defines.hpp"
 #include "Skore/Core/Hash.hpp"
 #include "Skore/Core/StringView.hpp"
+#include "Skore/Core/String.hpp"
+#include "Skore/Core/Span.hpp"
 
 namespace Skore
 {
@@ -45,5 +47,28 @@ namespace Skore
 		{
 			return HashValue(rid.Id);
 		}
+	};
+
+	enum ResourceFieldType_
+	{
+		ResourceFieldType_Bool   = 1,
+		ResourceFieldType_Int    = 2,
+		ResourceFieldType_Float  = 3,
+		ResourceFieldType_String = 4
+	};
+
+	typedef u32 ResourceFieldType;
+
+	struct ResourceFieldCreation
+	{
+		StringView        Name{};
+		ResourceFieldType Type{};
+	};
+
+	struct ResourceTypeCreation
+	{
+		StringView                  Name{};
+		TypeID                      TypeId{};
+		Span<ResourceFieldCreation> Fields{};
 	};
 }

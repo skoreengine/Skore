@@ -8,41 +8,44 @@
 
 namespace Skore::Tests
 {
-	struct SimpleTest
-	{
-		i32        Value{};
-		Array<RID> SubObjects{};
-	};
-
 	TEST_CASE("Repository::Basics")
 	{
 		Repository::Init();
 
-//		auto runtimeType = Reflection::Type("Skore::Tests::RuntimeTestTypeID", RuntimeTestTypeId);
-//		runtimeType.Field("Value", GetTypeID<i32>());
-//
-//		auto simpleTest = Reflection::Type<SimpleTest>();
-//		simpleTest.Field<&SimpleTest::Value>("Value");
-//
-//
-//		RID rid = Repository::CreateObject(GetTypeID<SimpleTest>());
-//
-//		SimpleTest* write = Repository::Write<SimpleTest>(rid);
-//		write->Value = 10;
-//		Repository::Commit(rid, write);
-//
-//		const SimpleTest* read = Repository::Read<SimpleTest>(rid);
-//		CHECK(read->Value == 10);
+		ResourceFieldCreation fields[] = {
+			ResourceFieldCreation{
+				.Name = "BoolValue",
+				.Type = ResourceFieldType_Bool
+			},
+			ResourceFieldCreation{
+				.Name = "IntValue",
+				.Type = ResourceFieldType_Int
+			},
+			ResourceFieldCreation{
+				.Name = "FloatValue",
+				.Type = ResourceFieldType_Float
+			},
+			ResourceFieldCreation{
+				.Name = "StringValue",
+				.Type = ResourceFieldType_String
+			}
+		};
 
+		ResourceTypeCreation resourceTypeCreation{
+			.Name = "TestResource",
+			.TypeId = HashValue("TestResource"),
+			.Fields = fields
+		};
 
-//
-//		RID rid = Repository::CreateObject(GetTypeID<SimpleTest>());
-//		ResourceObject writeObject = Repository::Write(rid);
-//		writeObject.SetValue("Value", 10);
-//		writeObject.Commit();
-//
-//		ResourceObject readObject = Repository::Get(rid);
-//		CHECK(readObject.GetValueAs<i32>("Value") == 10);
+		Repository::CreateResourceType(resourceTypeCreation);
+
+		RID rid = Repository::CreateResource(HashValue("TestResource"));
+		ResourceSet* write = Repository::Write(rid);
+		write->SetInt("IntValue", 102);
+		write->Commit();
+
+		const ResourceSet* read = Repository::Read(rid);
+		CHECK(read->GetInt("IntValue") == 102);
 
 
 		Reflection::Shutdown();

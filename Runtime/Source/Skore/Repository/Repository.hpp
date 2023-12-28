@@ -5,27 +5,18 @@
 
 #include "Skore/Defines.hpp"
 #include "RepositoryTypes.hpp"
+#include "ResourceSet.hpp"
 
 namespace Skore::Repository
 {
-	SK_API void             Init();
+	SK_API void Init();
+	SK_API void Shutdown();
 
-	SK_API RID              CreateObject(TypeID typeId);
-	SK_API ConstCPtr        Read(RID rid);
-	SK_API CPtr             Write(RID rid);
-	SK_API void             Commit(RID rid, CPtr instance);
+	SK_API void CreateResourceType(const ResourceTypeCreation& resourceTypeCreation);
+	SK_API void CreateResourceType(TypeID typeId);
 
-	SK_API void             Shutdown();
+	SK_API RID                          CreateResource(TypeID typeId);
+	SK_API const ResourceSet*           Read(RID rid);
+	SK_API ResourceSet*                 Write(RID rid);
 
-	template<typename T>
-	const T* Read(RID rid)
-	{
-		return static_cast<const T*>(Read(rid));
-	}
-
-	template<typename T>
-	T* Write(RID rid)
-	{
-		return static_cast<T*>(Write(rid));
-	}
 }

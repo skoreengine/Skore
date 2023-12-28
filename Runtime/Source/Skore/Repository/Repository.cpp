@@ -11,30 +11,36 @@ namespace Skore
 
 	}
 
-	RID Repository::CreateObject(TypeID typeId)
-	{
-		return RID();
-	}
-
-	ConstCPtr Repository::Read(RID rid)
-	{
-		return nullptr;
-	}
-
-	CPtr Repository::Write(RID rid)
-	{
-		return nullptr;
-	}
-
-
 	void Repository::Shutdown()
 	{
 
 	}
 
-	void Repository::Commit(RID rid, CPtr instance)
+	void Repository::CreateResourceType(const ResourceTypeCreation& resourceTypeCreation)
 	{
 
 	}
+
+	void Repository::CreateResourceType(TypeID typeId)
+	{
+
+	}
+
+	RID Repository::CreateResource(TypeID typeId)
+	{
+		return RID();
+	}
+
+	const ResourceSet* Repository::Read(RID rid)
+	{
+		return nullptr;
+	}
+
+	ResourceSet* Repository::Write(RID rid)
+	{
+		return nullptr;
+	}
+
+
 
 }
