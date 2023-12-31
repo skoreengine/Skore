@@ -5,32 +5,45 @@
 
 #include "Skore/Defines.hpp"
 #include "Skore/Core/StringView.hpp"
+
+
 namespace Skore
 {
 	class SK_API ResourceSet
 	{
 	public:
-		void SetInt(u32 index, i64 value);
-		void SetFloat(u32 index, f64 value);
-		void SetBool(u32 index, bool value);
-		void SetString(u32 index, const StringView& value);
+		void SetValue(const StringView& name, ConstCPtr value);
+		void SetValue(u32 index, ConstCPtr value);
 
-		void SetInt(const StringView& name, i64 value);
-		void SetFloat(const StringView& name, f64 value);
-		void SetBool(const StringView& name, bool value);
-		void SetString(const StringView& name, const StringView& value);
+		ConstCPtr GetValue(const StringView& name) const;
+		ConstCPtr GetValue(u32 index) const;
 
-		i64 GetInt(u32 index) const;
-		f64 GetFloat(u32 index) const;
-		bool GetBool(u32 index) const;
-		StringView GetString(u32 index) const;
+		template<typename Type>
+		void Set(const StringView& name, const Type& value)
+		{
+			SetValue(name, &value);
+		}
 
-		i64 GetInt(const StringView& name) const;
-		f64 GetFloat(const StringView& name) const;
-		bool GetBool(const StringView& name) const;
-		StringView GetString(const StringView& name) const;
+		template<typename Type>
+		void Set(u32 index, const Type& value)
+		{
+			SetValue(index, &value);
+		}
+
+		template<typename Type>
+		const Type& Get(const StringView& name) const
+		{
+			return *static_cast<const Type*>(GetValue(name));
+		}
+
+		template<typename Type>
+		const Type& Get(u32 index) const
+		{
+			return *static_cast<const Type*>(GetValue(index));
+		}
 
 		void Commit();
+
 	private:
 
 	};

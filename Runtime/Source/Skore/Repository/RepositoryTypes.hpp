@@ -49,20 +49,10 @@ namespace Skore
 		}
 	};
 
-	enum ResourceFieldType_
-	{
-		ResourceFieldType_Bool   = 1,
-		ResourceFieldType_Int    = 2,
-		ResourceFieldType_Float  = 3,
-		ResourceFieldType_String = 4
-	};
-
-	typedef u32 ResourceFieldType;
-
 	struct ResourceFieldCreation
 	{
-		StringView        Name{};
-		ResourceFieldType Type{};
+		StringView  Name{};
+		TypeID      Type{};
 	};
 
 	struct ResourceTypeCreation

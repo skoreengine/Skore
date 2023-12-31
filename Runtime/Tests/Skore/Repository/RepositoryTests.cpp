@@ -15,19 +15,19 @@ namespace Skore::Tests
 		ResourceFieldCreation fields[] = {
 			ResourceFieldCreation{
 				.Name = "BoolValue",
-				.Type = ResourceFieldType_Bool
+				.Type = GetTypeID<bool>()
 			},
 			ResourceFieldCreation{
 				.Name = "IntValue",
-				.Type = ResourceFieldType_Int
+				.Type = GetTypeID<i32>()
 			},
 			ResourceFieldCreation{
 				.Name = "FloatValue",
-				.Type = ResourceFieldType_Float
+				.Type = GetTypeID<f32>()
 			},
 			ResourceFieldCreation{
 				.Name = "StringValue",
-				.Type = ResourceFieldType_String
+				.Type = GetTypeID<String>()
 			}
 		};
 
@@ -41,11 +41,11 @@ namespace Skore::Tests
 
 		RID rid = Repository::CreateResource(HashValue("TestResource"));
 		ResourceSet* write = Repository::Write(rid);
-		write->SetInt("IntValue", 102);
+		write->Set("IntValue", 102);
 		write->Commit();
 
 		const ResourceSet* read = Repository::Read(rid);
-		//CHECK(read->GetInt("IntValue") == 102);
+		CHECK(read->Get<i32>("IntValue") == 102);
 
 
 		Reflection::Shutdown();

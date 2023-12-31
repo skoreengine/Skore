@@ -5,84 +5,27 @@
 
 namespace Skore
 {
-	void ResourceSet::SetInt(u32 index, i64 value)
+
+	i32 dummy = 102;
+
+	void ResourceSet::SetValue(const StringView& name, ConstCPtr value)
 	{
 
 	}
 
-	void ResourceSet::SetFloat(u32 index, f64 value)
+	void ResourceSet::SetValue(u32 index, ConstCPtr value)
 	{
 
 	}
 
-	void ResourceSet::SetBool(u32 index, bool value)
+	ConstCPtr ResourceSet::GetValue(const StringView& name) const
 	{
-
+		return &dummy;
 	}
 
-	void ResourceSet::SetString(u32 index, const StringView& value)
+	ConstCPtr ResourceSet::GetValue(u32 index) const
 	{
-
-	}
-
-	void ResourceSet::SetInt(const StringView& name, i64 value)
-	{
-
-	}
-
-	void ResourceSet::SetFloat(const StringView& name, f64 value)
-	{
-
-	}
-
-	void ResourceSet::SetBool(const StringView& name, bool value)
-	{
-
-	}
-
-	void ResourceSet::SetString(const StringView& name, const StringView& value)
-	{
-
-	}
-
-	i64 ResourceSet::GetInt(u32 index) const
-	{
-		return 0;
-	}
-
-	f64 ResourceSet::GetFloat(u32 index) const
-	{
-		return 0;
-	}
-
-	bool ResourceSet::GetBool(u32 index) const
-	{
-		return false;
-	}
-
-	StringView ResourceSet::GetString(u32 index) const
-	{
-		return Skore::StringView();
-	}
-
-	i64 ResourceSet::GetInt(const StringView& name) const
-	{
-		return 0;
-	}
-
-	f64 ResourceSet::GetFloat(const StringView& name) const
-	{
-		return 0;
-	}
-
-	bool ResourceSet::GetBool(const StringView& name) const
-	{
-		return false;
-	}
-
-	StringView ResourceSet::GetString(const StringView& name) const
-	{
-		return Skore::StringView();
+		return &dummy;
 	}
 
 	void ResourceSet::Commit()
