@@ -41,5 +41,6 @@ elseif (APPLE)
 	SET(CMAKE_INSTALL_RPATH "${ORIGIN}/")
 endif()
 
+enable_testing()
 add_subdirectory(Player)
 add_subdirectory(Runtime)

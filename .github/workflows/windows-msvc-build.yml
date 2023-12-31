@@ -1,0 +1,21 @@
+name: windows-msvc-build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: configure
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build . --target all
+          ctest --verbose -C Debug

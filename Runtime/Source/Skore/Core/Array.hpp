@@ -119,25 +119,25 @@ namespace Skore
 	}
 
 	template<typename T>
-	SK_FINLINE Array<T>::Iterator Array<T>::begin()
+	SK_FINLINE typename Array<T>::Iterator Array<T>::begin()
 	{
 		return m_First;
 	}
 
 	template<typename T>
-	SK_FINLINE Array<T>::Iterator Array<T>::end()
+	SK_FINLINE typename Array<T>::Iterator Array<T>::end()
 	{
 		return m_Last;
 	}
 
 	template<typename T>
-	SK_FINLINE Array<T>::ConstIterator Array<T>::begin() const
+	SK_FINLINE typename Array<T>::ConstIterator Array<T>::begin() const
 	{
 		return m_First;
 	}
 
 	template<typename T>
-	SK_FINLINE Array<T>::ConstIterator Array<T>::end() const
+	SK_FINLINE typename Array<T>::ConstIterator Array<T>::end() const
 	{
 		return m_Last;
 	}

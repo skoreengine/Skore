@@ -44,8 +44,21 @@ typedef decltype(sizeof(0)) usize;
 #   define SK_API
 #   define SK_PATH_SEPARATOR '/'
 #   define SK_UNIX
+#   define SK_APPLE
 #   define SK_SHARED_EXT ".dylib"
-#   define SK_FINLINE static inline
+#   define SK_FINLINE inline
+	#if TARGET_IPHONE_SIMULATOR
+    // iOS, tvOS, or watchOS Simulator
+    #elif TARGET_OS_MACCATALYST
+    // Mac's Catalyst (ports iOS API into Mac, like UIKit).
+    #elif TARGET_OS_IPHONE
+		#define SK_MOBILE 1
+    #elif TARGET_OS_MAC
+    // Other kinds of Apple platforms
+#       define SK_DESKTOP
+    #else
+    #   error "Unknown Apple platform"
+	#endif
 #else
 #   error "Unknown Apple platform"
 #endif
