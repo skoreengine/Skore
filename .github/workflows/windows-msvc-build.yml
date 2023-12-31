@@ -17,5 +17,5 @@ jobs:
           mkdir build
           cd build
           cmake ..
-          cmake --build . --target all
+          cmake --build .
           ctest --verbose -C Debug
