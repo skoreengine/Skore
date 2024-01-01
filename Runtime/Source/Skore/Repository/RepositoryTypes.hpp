@@ -61,4 +61,6 @@ namespace Skore
 		TypeID                      TypeId{};
 		Span<ResourceFieldCreation> Fields{};
 	};
+
+	struct ResourceStorage;
 }

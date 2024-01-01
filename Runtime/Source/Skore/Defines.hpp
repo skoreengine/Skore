@@ -23,6 +23,7 @@ typedef u64 TypeID;
 typedef decltype(sizeof(0)) usize;
 
 #define SK_STRING_BUFFER_SIZE 18
+#define SK_REPO_PAGE_SIZE 4096
 
 #if _WIN64
 #   define SK_API __declspec(dllexport)

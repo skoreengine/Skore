@@ -77,6 +77,7 @@ namespace Skore
 		void SetNewInstanceFn(NewInstanceFn newInstanceFn);
 
 		CPtr NewInstance(Allocator* allocator, CPtr* params);
+		void Construct(CPtr memory, CPtr* params);
 
 	private:
 		PlacementNewFn m_PlacementNewFn;
@@ -165,11 +166,13 @@ namespace Skore
 	class SK_API TypeHandler
 	{
 		typedef void (*FnDestroy)(const TypeHandler* typeHandler, Allocator* allocator, CPtr instance);
+		typedef void (*FnDestructor)(const TypeHandler* typeHandler, CPtr instance);
 		typedef void (*FnCopy)(const TypeHandler* typeHandler, ConstCPtr source, CPtr dest);
 	public:
-		TypeHandler(const StringView& name, u32 version);
+		TypeHandler(const StringView& name, const TypeInfo& typeInfo, u32 version);
 		void SetFnDestroy(FnDestroy fnDestroy);
 		void SetFnCopy(FnCopy fnCopy);
+		void SetFnDestructor(FnDestructor destructor);
 
 		ConstructorHandler& NewConstructor(TypeID* ids, usize size);
 		ConstructorHandler* FindConstructor(TypeID* ids, usize size) const;
@@ -186,6 +189,14 @@ namespace Skore
 		AttributeHandler& NewAttribute(TypeID attributeId);
 		ConstCPtr GetAttribute(TypeID attributeId) const;
 
+
+		void Construct(CPtr memory)
+		{
+			if (ConstructorHandler* constructor = FindConstructor(nullptr, 0))
+			{
+				return constructor->Construct(memory, nullptr);
+			}
+		}
 
 		CPtr NewInstance(Allocator* allocator = GetDefaultAllocator()) const
 		{
@@ -222,13 +233,20 @@ namespace Skore
 		}
 
 		void Destroy(CPtr instance, Allocator* allocator = GetDefaultAllocator()) const;
+		void Destructor(CPtr instance) const;
 		void Copy(ConstCPtr source, CPtr dest) const;
 
+		StringView GetName() const;
+		const TypeInfo& GetTypeInfo() const;
+		u32 GetVersion() const;
+
 	private:
-		String    m_Name{};
-		u32       m_Version{};
-		FnDestroy m_FnDestroy{};
-		FnCopy    m_FnCopy{};
+		String       m_Name{};
+		TypeInfo     m_TypeInfo{};
+		u32          m_Version{};
+		FnDestroy    m_FnDestroy{};
+		FnCopy       m_FnCopy{};
+		FnDestructor m_FnDestructor{};
 
 		HashMap<usize, SharedPtr<ConstructorHandler>> m_Constructors;
 		Array<ConstructorHandler*>                    m_ConstructorArray;
@@ -315,6 +333,7 @@ namespace Skore
 	{
 		static void DestroyImpl(const TypeHandler* typeHandler, Allocator* allocator, CPtr instance){};
 		static void CopyImpl(const TypeHandler* typeHandler, ConstCPtr source, CPtr dest) {};
+		static void DestructorImpl(const TypeHandler* typeHandler, CPtr instance){};
 	};
 
 	template<typename Type>
@@ -333,6 +352,14 @@ namespace Skore
 		{
 			new(PlaceHolder(), dest) Type(*static_cast<const Type*>(source));
 		}
+
+		static void DestructorImpl(const TypeHandler* typeHandler, CPtr instance)
+		{
+			if constexpr (Traits::IsDestructible<Type>)
+			{
+				static_cast<Type*>(instance)->~Type();
+			}
+		};
 	};
 
 	template<auto mfp, typename Owner, typename Field>
@@ -579,6 +606,7 @@ namespace Skore
 			}
 			typeHandler.SetFnDestroy(&NativeTypeHandlerFuncs<Type>::DestroyImpl);
 			typeHandler.SetFnCopy(&NativeTypeHandlerFuncs<Type>::CopyImpl);
+			typeHandler.SetFnDestructor(&NativeTypeHandlerFuncs<Type>::DestructorImpl);
 		}
 
 		inline auto Constructor()
@@ -652,6 +680,7 @@ namespace Skore
 	namespace Reflection
 	{
 
+		SK_API void Init();
 		SK_API void Shutdown();
 
 		SK_API TypeHandler& NewType(const StringView& name, const TypeInfo& typeInfo);
@@ -668,6 +697,12 @@ namespace Skore
 		SK_API inline decltype(auto) Type()
 		{
 			return NativeTypeHandler<T>(NewType(GetTypeName<T>(), GetTypeInfo<T>()));
+		}
+
+		template<typename T>
+		SK_API inline decltype(auto) Type(const StringView& name)
+		{
+			return NativeTypeHandler<T>(NewType(name, GetTypeInfo<T>()));
 		}
 
 		SK_API inline decltype(auto) Type(const StringView& name, TypeID typeId)

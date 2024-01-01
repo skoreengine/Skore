@@ -122,9 +122,14 @@ namespace Skore::Tests
 
 		TypeHandler* incompleteType = Reflection::FindTypeByName("Skore::Tests::IncompleteType");
 		CHECK(incompleteType->GetAttribute<TestAttribute>()->Value == 20);
+		CHECK(incompleteType->GetTypeInfo().Size == 0);
 
 		TypeHandler* testClass = Reflection::FindTypeByName("Skore::Tests::ReflectionTestClass");
 		REQUIRE(testClass != nullptr);
+
+		CHECK(testClass->GetName() == "Skore::Tests::ReflectionTestClass");
+		CHECK(testClass->GetTypeInfo().TypeId == GetTypeID<ReflectionTestClass>());
+		CHECK(testClass->GetTypeInfo().Size == sizeof(ReflectionTestClass));
 
 		CHECK(testClass->GetAttribute<TestAttribute>()->Value == 10);
 

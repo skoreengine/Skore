@@ -26,7 +26,7 @@ namespace Skore
 
 	ReflectionContext reflection{};
 
-	TypeHandler::TypeHandler(const StringView& name, u32 version) : m_Name(name), m_Version(version)
+	TypeHandler::TypeHandler(const StringView& name, const TypeInfo& typeInfo, u32 version) : m_Name(name), m_TypeInfo(typeInfo), m_Version(version)
 	{
 	}
 
@@ -38,6 +38,11 @@ namespace Skore
 	void TypeHandler::SetFnCopy(FnCopy fnCopy)
 	{
 		m_FnCopy = fnCopy;
+	}
+
+	void TypeHandler::SetFnDestructor(FnDestructor destructor)
+	{
+		m_FnDestructor = destructor;
 	}
 
 	ConstructorHandler& TypeHandler::NewConstructor(TypeID* ids, usize size)
@@ -154,6 +159,29 @@ namespace Skore
 		return nullptr;
 	}
 
+	StringView TypeHandler::GetName() const
+	{
+		return m_Name;
+	}
+
+	const TypeInfo& TypeHandler::GetTypeInfo() const
+	{
+		return m_TypeInfo;
+	}
+
+	u32 TypeHandler::GetVersion() const
+	{
+		return m_Version;
+	}
+
+	void TypeHandler::Destructor(CPtr instance) const
+	{
+		if (instance && m_FnDestructor)
+		{
+			m_FnDestructor(this, instance);
+		}
+	}
+
 	TypeHandler& Reflection::NewType(const StringView& name, const TypeInfo& typeInfo)
 	{
 		auto itByName = reflection.TypesByName.Find(name);
@@ -169,7 +197,7 @@ namespace Skore
 		}
 
 		usize version = itByName->Second.Size() + 1;
-		SharedPtr<TypeHandler> typeHandler = MakeShared<TypeHandler>(name, version);
+		SharedPtr<TypeHandler> typeHandler = MakeShared<TypeHandler>(name, typeInfo, version);
 
 		itByName->Second.EmplaceBack(typeHandler);
 		itById->Second.EmplaceBack(typeHandler);
@@ -203,6 +231,24 @@ namespace Skore
 		return nullptr;
 	}
 
+	void Reflection::Init()
+	{
+		Reflection::Type<bool>("bool");
+		Reflection::Type<u8>("u8");
+		Reflection::Type<u16>("u16");
+		Reflection::Type<u32>("u32");
+		Reflection::Type<u64>("u64");
+		Reflection::Type<ul32>("ul32");
+		Reflection::Type<i8>("i8");
+		Reflection::Type<i16>("i16");
+		Reflection::Type<i32>("i32");
+		Reflection::Type<i64>("i64");
+		Reflection::Type<f32>("f32");
+		Reflection::Type<f64>("f64");
+		Reflection::Type<String>("Skore::String");
+		Reflection::Type<StringView>("Skore::StringView");
+	}
+
 	void AttributeHandler::SetFnGetValue(AttributeHandler::FnGetValue fnGetValue)
 	{
 		m_FnGetValue = fnGetValue;
@@ -234,6 +280,14 @@ namespace Skore
 			return m_NewInstanceFn(this, allocator, params);
 		}
 		return nullptr;
+	}
+
+	void ConstructorHandler::Construct(CPtr memory, CPtr* params)
+	{
+		if (m_PlacementNewFn)
+		{
+			m_PlacementNewFn(this, memory, params);
+		}
 	}
 
 	FieldHandler::FieldHandler(const String& name) : m_Name(name)
