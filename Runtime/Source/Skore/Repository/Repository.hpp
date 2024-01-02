@@ -17,6 +17,7 @@ namespace Skore::Repository
 	SK_API void CreateResourceType(TypeID typeId);
 
 	SK_API RID              CreateResource(TypeID typeId);
+	SK_API RID              CreateFromPrototype(RID prototype);
 	SK_API ResourceObject   Read(RID rid);
 	SK_API ResourceObject   Write(RID rid);
 

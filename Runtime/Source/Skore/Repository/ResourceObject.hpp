@@ -11,7 +11,10 @@ namespace Skore
 	class SK_API ResourceObject
 	{
 	public:
-		ResourceObject(ResourceStorage* resourceStorage, CPtr memory, bool ownMemory);
+		ResourceObject(ResourceStorage* resourceStorage, ResourceData* data, bool ownMemory);
+		ResourceObject(const ResourceObject& object) = delete;
+		ResourceObject& operator=(const ResourceObject& object) = delete;
+
 		virtual ~ResourceObject();
 
 		inline ConstCPtr Get(const StringView& name) const
@@ -39,42 +42,41 @@ namespace Skore
 		template<typename T>
 		void Set(const StringView& name, const T& value)
 		{
-			SetPtr(name, &value);
+			SetPtr(name, &value, GetTypeID<T>());
 		}
 
 		template<typename T>
 		void Set(u32 index, const T& value)
 		{
-			SetPtr(index, &value);
+			SetPtr(index, &value, GetTypeID<T>());
 		}
 
-
-		void Set(const StringView& name, ConstCPtr value)
+		void Set(const StringView& name, ConstCPtr value, TypeID typeId)
 		{
-			SetPtr(name, value);
+			SetPtr(name, value, typeId);
 		}
 
-		void Set(u32 index, ConstCPtr value)
+		void Set(u32 index, ConstCPtr value, TypeID typeId)
 		{
-			SetPtr(index, &value);
+			SetPtr(index, &value, typeId);
 		}
 
 		explicit operator bool() const
 		{
-			return m_ResourceStorage != nullptr && m_Memory != nullptr;
+			return m_ResourceStorage != nullptr && m_Data != nullptr;
 		}
 
 		void Commit();
 
 	private:
 		ResourceStorage* m_ResourceStorage;
-		CPtr             m_Memory;
+		ResourceData*    m_Data;
 		bool             m_OwnMemory;
 
 		ConstCPtr GetPtr(const StringView& name) const;
 		ConstCPtr GetPtr(u32 index) const;
-		void SetPtr(const StringView& name, ConstCPtr ptr);
-		void SetPtr(u32 index, ConstCPtr ptr);
+		void SetPtr(const StringView& name, ConstCPtr ptr, TypeID typeId);
+		void SetPtr(u32 index, ConstCPtr ptr, TypeID typeId);
 	};
 
 }

@@ -63,4 +63,5 @@ namespace Skore
 	};
 
 	struct ResourceStorage;
+	struct ResourceData;
 }

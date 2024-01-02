@@ -41,4 +41,26 @@ namespace Skore
 		GetDefaultAllocator()->MemFree(GetDefaultAllocator()->Alloc, type, sizeof(Type));
 	}
 
+	template<typename Type, typename ...Args>
+	static Type* Alloc(Allocator* allocator, Args&& ...args)
+	{
+		auto ptr = static_cast<Type*>(allocator->MemAlloc(allocator->Alloc, sizeof(Type)));
+		if constexpr (Traits::IsAggregate<Type>)
+		{
+			new(PlaceHolder(), ptr) Type{Traits::Forward<Args>(args)...};
+		}
+		else
+		{
+			new(PlaceHolder(), ptr) Type(Traits::Forward<Args>(args)...);
+		}
+		return ptr;
+	}
+
+	template<typename Type>
+	static void Destroy(Allocator* allocator, Type * type)
+	{
+		type->~Type();
+		allocator->MemFree(allocator->Alloc, type, sizeof(Type));
+	}
+
 }
