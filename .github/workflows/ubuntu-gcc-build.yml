@@ -1,4 +1,4 @@
-name: windows-msvc-build
+name: ubuntu-gcc-build
 
 on:
   push:
@@ -14,8 +14,7 @@ jobs:
 
       - name: install dependencies
         run: |
-          sudo apt install gcc-11
-          sudo apt install g++-11        
+          sudo apt-get install xorg-dev libglu1-mesa-dev        
 
       - name: build
         shell: bash
