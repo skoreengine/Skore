@@ -1,0 +1,27 @@
+name: windows-msvc-build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: install dependencies
+        run: |
+          sudo apt install gcc-11
+          sudo apt install g++-11        
+
+      - name: build
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake ..
+          cmake --build .
+          ctest --verbose -C Debug
