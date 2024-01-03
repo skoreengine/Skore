@@ -17,6 +17,7 @@ namespace Skore::Platform
 	SK_API void         DestroyWindow(Window window);
 
 	SK_API CPtr         LoadSharedLib(const StringView& libPath);
+    SK_API void         FreeSharedLib(CPtr library);
 	SK_API CPtr         GetAddress(CPtr, const char* funcName);
 
 	SK_API f64          GetTime();

@@ -4,6 +4,7 @@
 #pragma once
 
 #include "RepositoryTypes.hpp"
+#include "Skore/Core/TypeInfo.hpp"
 
 namespace Skore
 {

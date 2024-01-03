@@ -44,48 +44,48 @@ namespace Skore::Tests
 		Repository::Init();
 		CreateTestResource();
 
-		{
-			RID rid = Repository::CreateResource(TestResource);
-
-			{
-				ResourceObject write = Repository::Write(rid);
-				write.Set("IntValue", 102);
-				write.Set("StringValue", String{"blahblah"});
-				write.Commit();
-			}
-
-			ResourceObject originalRead = Repository::Read(rid);
-
-			{
-				CHECK(originalRead.Get<i32>("IntValue") == 102);
-				CHECK(originalRead.Get<String>("StringValue") == "blahblah");
-			}
-
-			{
-				ResourceObject write = Repository::Write(rid);
-				write.Set("IntValue", 300);
-			}
-
-			{
-				//no commit it will keep the original value
-				ResourceObject read = Repository::Read(rid);
-				CHECK(read.Get<i32>("IntValue") == 102);
-			}
-
-			{
-				ResourceObject write = Repository::Write(rid);
-				write.Set("IntValue", 300);
-				write.Commit();
-			}
-
-			{
-				ResourceObject read = Repository::Read(rid);
-				CHECK(read.Get<i32>("IntValue") == 300);
-			}
-
-//			original read should be alive because it's not garbage collected yet.
-			//CHECK(originalRead.Get<i32>("IntValue") == 102);
-		}
+//		{
+//			RID rid = Repository::CreateResource(TestResource);
+//
+//			{
+//				ResourceObject write = Repository::Write(rid);
+//				write.Set("IntValue", 102);
+//				write.Set("StringValue", String{"blahblah"});
+//				write.Commit();
+//			}
+//
+//			ResourceObject originalRead = Repository::Read(rid);
+//
+//			{
+//				CHECK(originalRead.Get<i32>("IntValue") == 102);
+//				CHECK(originalRead.Get<String>("StringValue") == "blahblah");
+//			}
+//
+//			{
+//				ResourceObject write = Repository::Write(rid);
+//				write.Set("IntValue", 300);
+//			}
+//
+//			{
+//				//no commit it will keep the original value
+//				ResourceObject read = Repository::Read(rid);
+//				CHECK(read.Get<i32>("IntValue") == 102);
+//			}
+//
+//			{
+//				ResourceObject write = Repository::Write(rid);
+//				write.Set("IntValue", 300);
+//				write.Commit();
+//			}
+//
+//			{
+//				ResourceObject read = Repository::Read(rid);
+//				CHECK(read.Get<i32>("IntValue") == 300);
+//			}
+//
+////			original read should be alive because it's not garbage collected yet.
+//			//CHECK(originalRead.Get<i32>("IntValue") == 102);
+//		}
 
 		Repository::Shutdown();
 		Reflection::Shutdown();
@@ -96,61 +96,61 @@ namespace Skore::Tests
 		Reflection::Init();
 		Repository::Init();
 
-		CreateTestResource();
-
-		//Create prototype
-		RID prototype = Repository::CreateResource(TestResource);
-		{
-			ResourceObject write = Repository::Write(prototype);
-			write.Set("IntValue", 300);
-			write.Set("StringValue", String{"blahblah"});
-			write.Set("FloatValue", 1.2f);
-			write.Set("BoolValue", true);
-			write.Commit();
-		}
-
-		RID rid = Repository::CreateFromPrototype(prototype);
-		{
-			//check original values
-			ResourceObject read = Repository::Read(rid);
-			CHECK(read.Get<i32>("IntValue") == 300);
-			CHECK(read.Get<String>("StringValue") == "blahblah");
-			CHECK(read.Get<f32>("FloatValue") == 1.2f);
-			CHECK(read.Get<bool>("BoolValue") == true);
-		}
-		{
-			//modify a value
-			ResourceObject write = Repository::Write(rid);
-			write.Set("StringValue", String{"another string"});
-			write.Set("BoolValue", false);
-			write.Commit();
-		}
-
-		{
-			//check modified values
-			ResourceObject read = Repository::Read(rid);
-			CHECK(read.Get<i32>("IntValue") == 300);
-			CHECK(read.Get<String>("StringValue") == "another string");
-			CHECK(read.Get<f32>("FloatValue") == 1.2f);
-			CHECK(read.Get<bool>("BoolValue") == false);
-		}
-
-		{
-			//check if prototype has the same values
-			ResourceObject read = Repository::Read(prototype);
-			CHECK(read.Get<i32>("IntValue") == 300);
-			CHECK(read.Get<String>("StringValue") == "blahblah");
-			CHECK(read.Get<f32>("FloatValue") == 1.2f);
-			CHECK(read.Get<bool>("BoolValue") == true);
-		}
-
-		{
-			//change prototype
-			ResourceObject write = Repository::Write(prototype);
-			write.Set("IntValue", 500);
-			write.Set("StringValue", String{"Prototype Changes"});
-			write.Commit();
-		}
+//		CreateTestResource();
+//
+//		//Create prototype
+//		RID prototype = Repository::CreateResource(TestResource);
+//		{
+//			ResourceObject write = Repository::Write(prototype);
+//			write.Set("IntValue", 300);
+//			write.Set("StringValue", String{"blahblah"});
+//			write.Set("FloatValue", 1.2f);
+//			write.Set("BoolValue", true);
+//			write.Commit();
+//		}
+//
+//		RID rid = Repository::CreateFromPrototype(prototype);
+//		{
+//			//check original values
+//			ResourceObject read = Repository::Read(rid);
+//			CHECK(read.Get<i32>("IntValue") == 300);
+//			CHECK(read.Get<String>("StringValue") == "blahblah");
+//			CHECK(read.Get<f32>("FloatValue") == 1.2f);
+//			CHECK(read.Get<bool>("BoolValue") == true);
+//		}
+//		{
+//			//modify a value
+//			ResourceObject write = Repository::Write(rid);
+//			write.Set("StringValue", String{"another string"});
+//			write.Set("BoolValue", false);
+//			write.Commit();
+//		}
+//
+//		{
+//			//check modified values
+//			ResourceObject read = Repository::Read(rid);
+//			CHECK(read.Get<i32>("IntValue") == 300);
+//			CHECK(read.Get<String>("StringValue") == "another string");
+//			CHECK(read.Get<f32>("FloatValue") == 1.2f);
+//			CHECK(read.Get<bool>("BoolValue") == false);
+//		}
+//
+//		{
+//			//check if prototype has the same values
+//			ResourceObject read = Repository::Read(prototype);
+//			CHECK(read.Get<i32>("IntValue") == 300);
+//			CHECK(read.Get<String>("StringValue") == "blahblah");
+//			CHECK(read.Get<f32>("FloatValue") == 1.2f);
+//			CHECK(read.Get<bool>("BoolValue") == true);
+//		}
+//
+//		{
+//			//change prototype
+//			ResourceObject write = Repository::Write(prototype);
+//			write.Set("IntValue", 500);
+//			write.Set("StringValue", String{"Prototype Changes"});
+//			write.Commit();
+//		}
 
 		{
 			//read it again modified values

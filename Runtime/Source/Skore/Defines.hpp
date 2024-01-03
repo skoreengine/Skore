@@ -76,6 +76,13 @@ typedef decltype(sizeof(0)) usize;
 #endif
 #endif
 
+#define SK_HANDLER(StructName) struct StructName { \
+    CPtr Handler;                                  \
+ operator bool() const {return Handler != nullptr; }          \
+ bool operator==(const StructName& b) const { return this->Handler == b.Handler; } \
+ bool operator!=(const StructName& b) const { return this->Handler != b.Handler; } \
+}
+
 #ifdef NDEBUG
 #  define SK_ASSERT(condition, message) ((void)0)
 #else
@@ -84,9 +91,3 @@ typedef decltype(sizeof(0)) usize;
 #  define SK_DEBUG
 #endif
 
-#define SK_HANDLER(StructName) struct StructName { \
-CPtr Handler;                                      \
- operator bool() const {return Handler != nullptr; }          \
- bool operator==(const StructName& b) const { return this->Handler == b.Handler; } \
- bool operator!=(const StructName& b) const { return this->Handler != b.Handler; } \
-}

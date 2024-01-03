@@ -16,28 +16,28 @@ namespace Skore
 {
 	DirIterator& DirIterator::operator++()
 	{
-		if (m_handler)
+		if (m_Handler)
 		{
-			auto dir = (DIR*) m_handler;
+			auto dir = (DIR*) m_Handler;
 			struct dirent* entry;
 			while ((entry = readdir(dir)) != nullptr)
 			{
 				bool isDirEntry = !(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0);
 				if (isDirEntry)
 				{
-                    m_path = m_directory + entry->d_name;
-                    m_handler = dir;
+                    m_Path = m_Directory + entry->d_name;
+                    m_Handler = dir;
 					return *this;
 				}
 			}
-			closedir((DIR*)m_handler);
-            m_handler = nullptr;
+			closedir((DIR*)m_Handler);
+            m_Handler = nullptr;
 		}
-        m_path = {};
+        m_Path = {};
 		return *this;
 	}
 
-	DirIterator::DirIterator(const Path& directory) : m_directory(directory), m_handler(nullptr)
+	DirIterator::DirIterator(const Path& directory) : m_Directory(directory), m_Handler(nullptr)
 	{
 		auto dir = opendir(directory.GetString().CStr());
 		if (dir)
@@ -48,8 +48,8 @@ namespace Skore
 				bool isDirEntry = !(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0);
 				if (isDirEntry)
 				{
-					m_path = directory + entry->d_name;
-                    m_handler = dir;
+					m_Path = directory + entry->d_name;
+                    m_Handler = dir;
 					break;
 				}
 			}
@@ -58,9 +58,9 @@ namespace Skore
 
 	DirIterator::~DirIterator()
 	{
-		if (m_handler)
+		if (m_Handler)
 		{
-			closedir((DIR*)m_handler);
+			closedir((DIR*)m_Handler);
 		}
 	}
 }
@@ -86,9 +86,9 @@ namespace Skore::FileSystem
 		struct stat st{};
 		bool exists = stat(path.CStr(), &st) == 0;
 		return {
-			.exists = exists,
-			.isDirectory = S_ISDIR(st.st_mode),
-			.lastModifiedTime = static_cast<f64>(st.st_mtime)
+			.Exists = exists,
+			.IsDirectory = S_ISDIR(st.st_mode),
+			.LastModifiedTime = static_cast<f64>(st.st_mtime)
 		};
 	}
 
