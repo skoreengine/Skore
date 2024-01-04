@@ -3,6 +3,7 @@
 
 #include <atomic>
 #include <mutex>
+#include <queue>
 #include "Repository.hpp"
 #include "Skore/Core/HashMap.hpp"
 #include "Skore/Core/SharedPtr.hpp"
@@ -12,15 +13,18 @@
 #define PAGE(value)    u32((value)/SK_REPO_PAGE_SIZE)
 #define OFFSET(value)  (u32)((value) & (SK_REPO_PAGE_SIZE - 1))
 
+#include "moodycamel/concurrentqueue.h"
+
 namespace Skore::Repository
 {
 	ResourceStorage* GetOrAllocate(RID rid);
 	RID NewId();
-	void DestroyData(ResourceStorage* resourceStorage, ResourceData* data);
+	void DestroyData(ResourceData* data);
 }
 
 namespace Skore
 {
+	struct ResourceStorage;
 
 	struct ResourceField
 	{
@@ -40,6 +44,7 @@ namespace Skore
 
 	struct ResourceData
 	{
+		ResourceStorage* Storage{};
 		CPtr Memory{};
 		Array<CPtr> Fields{};
 	};
@@ -48,13 +53,20 @@ namespace Skore
 	{
 		RID Rid;
 		ResourceType* ResourceType{};
-		ResourceData* Data{};
+		std::atomic<ResourceData*> Data;
+		ResourceStorage* Prototype{};
 	};
 
 	struct ResourcePage
 	{
 		ResourceStorage Elements[SK_REPO_PAGE_SIZE];
 	};
+
+	struct DestroyResourceData
+	{
+		ResourceData* Data{};
+	};
+
 
 	struct RepositoryContext
 	{
@@ -65,22 +77,31 @@ namespace Skore
 		std::atomic_size_t PageCount{};
 		ResourcePage* Pages[SK_REPO_PAGE_SIZE]{};
 		std::mutex PageMutex{};
+
+		moodycamel::ConcurrentQueue<DestroyResourceData> ToCollectItems = moodycamel::ConcurrentQueue<DestroyResourceData>(100);
 	};
 
 	RepositoryContext repository{};
 
 	void Repository::Init()
 	{
-		repository.Allocator = GetDefaultAllocator();
+		Init(GetDefaultAllocator());
+	}
+
+	void Repository::Init(Allocator* allocator)
+	{
+		repository.Allocator = allocator;
 		CreateResource({});
 	}
 
 	void Repository::Shutdown()
 	{
+		GarbageCollect();
+
 		for (u64 i = 0; i < repository.Counter; ++i)
 		{
 			ResourceStorage* storage = &repository.Pages[PAGE(i)]->Elements[OFFSET(i)];
-			DestroyData(storage, storage->Data);
+			DestroyData(storage->Data);
 			storage->~ResourceStorage();
 		}
 
@@ -103,14 +124,16 @@ namespace Skore
 		SharedPtr<ResourceType> resourceType = MakeShared<ResourceType>();
 
 		resourceType->TypeId = resourceTypeCreation.TypeId;
+		resourceType->FieldsByIndex.Resize(resourceTypeCreation.Fields.Size());
 
-		for (u32 index = 0; index < resourceTypeCreation.Fields.Size(); ++index)
+		for (const ResourceFieldCreation& resourceFieldCreation : resourceTypeCreation.Fields)
 		{
-			const ResourceFieldCreation& resourceFieldCreation =  resourceTypeCreation.Fields[index];
 			TypeHandler* type = Reflection::FindTypeById(resourceFieldCreation.Type);
 			SK_ASSERT(type, "Type not found");
-			auto it = resourceType->FieldsByName.Emplace(resourceFieldCreation.Name, MakeShared<ResourceField>(resourceFieldCreation.Name, type, index)).First;
-			resourceType->FieldsByIndex.EmplaceBack(it->Second.Get());
+			auto it = resourceType->FieldsByName.Emplace(resourceFieldCreation.Name, MakeShared<ResourceField>(resourceFieldCreation.Name, type, resourceFieldCreation.Index)).First;
+			SK_ASSERT(!resourceType->FieldsByIndex[resourceFieldCreation.Index], "Index duplicated");
+			resourceType->FieldsByIndex[resourceFieldCreation.Index] = it->Second.Get();
+
 			//TODO improve alignment
 			it->Second->Offset = resourceType->Size;
 			resourceType->Size += type->GetTypeInfo().Size;
@@ -130,37 +153,37 @@ namespace Skore
 		return RID{OFFSET(index), PAGE(index)};
 	}
 
-	//internals
+
 	ResourceStorage* Repository::GetOrAllocate(RID rid)
 	{
-		if (repository.PageCount <= rid.Page)
+		if (repository.PageCount == rid.Page)
 		{
 			std::unique_lock<std::mutex> lock(repository.PageMutex);
 			if (repository.Pages[rid.Page] == nullptr)
 			{
 				repository.Pages[rid.Page] = static_cast<ResourcePage*>(repository.Allocator->MemAlloc(repository.Allocator->Alloc, sizeof(ResourcePage)));
+				repository.PageCount++;
 			}
-			repository.PageCount++;
 		}
 		return &repository.Pages[rid.Page]->Elements[rid.Offset];
 	}
 
-	void Repository::DestroyData(ResourceStorage* resourceStorage, ResourceData* data)
+	void Repository::DestroyData(ResourceData* data)
 	{
 		if (data)
 		{
 			if (data->Memory)
 			{
-				u64 memoryLocation = (u64) data->Memory;
 				for (int i = 0; i < data->Fields.Size(); ++i)
 				{
-					u64 ptr = ((u64) data->Fields[i]);
-					if (ptr >= memoryLocation && ptr <= memoryLocation + resourceStorage->ResourceType->Size)
+					if (data->Fields[i] != nullptr)
 					{
-						resourceStorage->ResourceType->FieldsByIndex[i]->Type->Destructor(data->Fields[i]);
+						data->Storage->ResourceType->FieldsByIndex[i]->Type->Destructor(data->Fields[i]);
+						data->Fields[i] = nullptr;
 					}
 				}
-				repository.Allocator->MemFree(repository.Allocator->Alloc, data->Memory, sizeof(resourceStorage->ResourceType->Size));
+				repository.Allocator->MemFree(repository.Allocator->Alloc, data->Memory, data->Storage->ResourceType->Size);
+				data->Memory = nullptr;
 			}
 			Destroy(repository.Allocator, data);
 		}
@@ -195,13 +218,15 @@ namespace Skore
 		SK_ASSERT(prototypeStorage->Data, "Prototype can't be created from null resources");
 
 		ResourceData* data = Alloc<ResourceData>();
+		data->Storage = resourceStorage;
 		data->Memory = nullptr;
-		data->Fields = prototypeStorage->Data->Fields;
+		data->Fields.Resize(prototypeStorage->Data.load()->Fields.Size());
 
 		new(PlaceHolder(), resourceStorage) ResourceStorage{
 			.Rid = rid,
 			.ResourceType = prototypeStorage->ResourceType,
-			.Data = data
+			.Data = data,
+			.Prototype = prototypeStorage
 		};
 		return rid;
 	}
@@ -209,37 +234,92 @@ namespace Skore
 	ResourceObject Repository::Read(RID rid)
 	{
 		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
-		return ResourceObject{storage, storage->Data, false};
+		return ResourceObject{storage->Data, nullptr};
 	}
 
 	ResourceObject Repository::Write(RID rid)
 	{
 		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
 		CPtr memory = repository.Allocator->MemAlloc(repository.Allocator->Alloc, storage->ResourceType->Size);
-		return ResourceObject{storage, Alloc<ResourceData>(repository.Allocator, memory, Array<CPtr>(storage->ResourceType->FieldsByIndex.Size())), true};
+		ResourceData* data = Alloc<ResourceData>(repository.Allocator, storage, memory, Array<CPtr>(storage->ResourceType->FieldsByIndex.Size()));
+
+		if (storage->Data)
+		{
+			ResourceData* storageData = storage->Data.load();
+			for (int i = 0; i < storage->ResourceType->FieldsByIndex.Size(); ++i)
+			{
+				if (storageData->Fields[i] != nullptr)
+				{
+					data->Fields[i] = static_cast<char*>(memory) + storage->ResourceType->FieldsByIndex[i]->Offset;
+					storage->ResourceType->FieldsByIndex[i]->Type->Copy(storageData->Fields[i], data->Fields[i]);
+				}
+			}
+		}
+		return ResourceObject{storage->Data, data};
 	}
 
-	ResourceObject::ResourceObject(ResourceStorage* resourceStorage, ResourceData* data, bool ownMemory) : m_ResourceStorage(resourceStorage), m_Data(data), m_OwnMemory(ownMemory)
+	void Repository::GarbageCollect()
+	{
+		DestroyResourceData data;
+		while(repository.ToCollectItems.try_dequeue(data))
+		{
+			DestroyData(data.Data);
+		}
+	}
+
+	void Repository::ClearValues(RID rid)
+	{
+		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
+		if (storage->Data)
+		{
+			ResourceData* data = storage->Data.load();
+			if (data->Memory)
+			{
+				for (int i = 0; i < data->Fields.Size(); ++i)
+				{
+					if (data->Fields[i] != nullptr)
+					{
+						data->Storage->ResourceType->FieldsByIndex[i]->Type->Destructor(data->Fields[i]);
+						data->Fields[i] = nullptr;
+					}
+				}
+				repository.Allocator->MemFree(repository.Allocator->Alloc, data->Memory, data->Storage->ResourceType->Size);
+				data->Memory = nullptr;
+			}
+		}
+	}
+
+	ResourceObject::ResourceObject(ResourceData* readData, ResourceData* writeData) : m_ReadData(readData), m_WriteData(writeData)
 	{
 	}
 
 	ConstCPtr ResourceObject::GetPtr(const StringView& name) const
 	{
-		if (auto it = m_ResourceStorage->ResourceType->FieldsByName.Find(name))
+		if (auto it = m_ReadData->Storage->ResourceType->FieldsByName.Find(name))
 		{
 			return GetPtr(it->Second->Index);
 		}
 		return nullptr;
 	}
 
+	ConstCPtr ResourceObjectGet(ResourceData* data, u32 index)
+	{
+		ConstCPtr ptr = data->Fields[index];
+		if (!ptr && data->Storage->Prototype)
+		{
+			return ResourceObjectGet(data->Storage->Prototype->Data, index);
+		}
+		return ptr;
+	}
+
 	ConstCPtr ResourceObject::GetPtr(u32 index) const
 	{
-		return m_Data->Fields[index];
+		return ResourceObjectGet(m_ReadData, index);
 	}
 
 	void ResourceObject::SetPtr(const StringView& name, ConstCPtr ptr, TypeID typeId)
 	{
-		if (auto it = m_ResourceStorage->ResourceType->FieldsByName.Find(name))
+		if (auto it = m_WriteData->Storage->ResourceType->FieldsByName.Find(name))
 		{
 			SetPtr(it->Second->Index, ptr, typeId);
 		}
@@ -247,67 +327,39 @@ namespace Skore
 
 	void ResourceObject::SetPtr(u32 index, ConstCPtr ptr, TypeID typeId)
 	{
-		ResourceField* field = m_ResourceStorage->ResourceType->FieldsByIndex[index];
+		ResourceField* field = m_WriteData->Storage->ResourceType->FieldsByIndex[index];
 		SK_ASSERT(field->Type->GetTypeInfo().TypeId == typeId, "type is not the same");
 
-		if (m_Data->Fields[index] == nullptr)
+		if (m_WriteData->Fields[index] == nullptr)
 		{
-			m_Data->Fields[index] = static_cast<char*>(m_Data->Memory) + field->Offset;
+			m_WriteData->Fields[index] = static_cast<char*>(m_WriteData->Memory) + field->Offset;
 		}
 
-		field->Type->Copy(ptr, m_Data->Fields[index]);
+		field->Type->Copy(ptr, m_WriteData->Fields[index]);
 	}
 
 	void ResourceObject::Commit()
 	{
-		ResourceData* original = m_ResourceStorage->Data;
-		m_ResourceStorage->Data = m_Data;
-
-		if (original)
+		if (m_ReadData)
 		{
-			u64 memoryLocation = (u64) original->Memory;
-
-			for (int i = 0; i < m_ResourceStorage->Data->Fields.Size(); ++i)
+			if (m_WriteData->Storage->Data.compare_exchange_strong(m_ReadData, m_WriteData))
 			{
-				if (m_ResourceStorage->Data->Fields[i] == nullptr && original->Fields[i] != nullptr)
-				{
-					u64 ptr = (u64) original->Fields[i];
-					if (ptr >= memoryLocation && ptr <= (memoryLocation + m_ResourceStorage->ResourceType->Size))
-					{
-						m_ResourceStorage->ResourceType->FieldsByIndex[i]->Type->Copy(original->Fields[i], m_ResourceStorage->Data->Fields[i]);
-					}
-					else
-					{
-						m_ResourceStorage->Data->Fields[i] = original->Fields[i];
-					}
-				}
+				repository.ToCollectItems.enqueue(DestroyResourceData{m_ReadData});
+				m_WriteData = nullptr;
 			}
-			//TODO - defer
-			Repository::DestroyData(m_ResourceStorage, original);
 		}
 		else
 		{
-			for (int i = 0; i < m_ResourceStorage->Data->Fields.Size(); ++i)
-			{
-				if (m_ResourceStorage->Data->Fields[i] == nullptr)
-				{
-					m_ResourceStorage->Data->Fields[i] = static_cast<char*>(m_ResourceStorage->Data->Memory) + m_ResourceStorage->ResourceType->FieldsByIndex[i]->Offset;
-					m_ResourceStorage->ResourceType->FieldsByIndex[i]->Type->Construct(m_ResourceStorage->Data->Fields[i]);
-				}
-			}
+			m_WriteData->Storage->Data = m_WriteData;
+			m_WriteData = nullptr;
 		}
-
-		m_OwnMemory = false;
-		m_Data = nullptr;
 	}
 
 	ResourceObject::~ResourceObject()
 	{
-		//this should be called only in cases of writes with missing commits.
-		if (m_OwnMemory && m_Data)
+		if (m_WriteData)
 		{
-			Repository::DestroyData(m_ResourceStorage, m_Data);
+			Repository::DestroyData(m_WriteData);
 		}
 	}
-
 }

@@ -12,7 +12,7 @@ namespace Skore
 	class SK_API ResourceObject
 	{
 	public:
-		ResourceObject(ResourceStorage* resourceStorage, ResourceData* data, bool ownMemory);
+		ResourceObject(ResourceData* readData,  ResourceData* writeData);
 		ResourceObject(const ResourceObject& object) = delete;
 		ResourceObject& operator=(const ResourceObject& object) = delete;
 
@@ -64,15 +64,24 @@ namespace Skore
 
 		explicit operator bool() const
 		{
-			return m_ResourceStorage != nullptr && m_Data != nullptr;
+			return m_ReadData != nullptr;
+		}
+
+		bool Has(u32 index) const
+		{
+			return GetPtr(index) != nullptr;
+		}
+
+		bool Has(const StringView& name) const
+		{
+			return GetPtr(name) != nullptr;
 		}
 
 		void Commit();
 
 	private:
-		ResourceStorage* m_ResourceStorage;
-		ResourceData*    m_Data;
-		bool             m_OwnMemory;
+		ResourceData*    m_ReadData;
+		ResourceData*    m_WriteData;
 
 		ConstCPtr GetPtr(const StringView& name) const;
 		ConstCPtr GetPtr(u32 index) const;

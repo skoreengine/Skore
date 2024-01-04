@@ -72,6 +72,8 @@ namespace Skore
 		RenderDevice::EndRenderPass(cmd);
 		RenderDevice::EndFrame(app.Swapchain);
 
+		Repository::GarbageCollect();
+
 		return app.Running;
 	}
 

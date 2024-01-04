@@ -51,6 +51,7 @@ namespace Skore
 
 	struct ResourceFieldCreation
 	{
+		u32         Index{UINT32_MAX};
 		StringView  Name{};
 		TypeID      Type{};
 	};

@@ -11,13 +11,16 @@
 namespace Skore::Repository
 {
 	SK_API void Init();
+	SK_API void Init(Allocator* allocator);
 	SK_API void Shutdown();
+	SK_API void GarbageCollect();
 
 	SK_API void CreateResourceType(const ResourceTypeCreation& resourceTypeCreation);
 	SK_API void CreateResourceType(TypeID typeId);
 
 	SK_API RID              CreateResource(TypeID typeId);
 	SK_API RID              CreateFromPrototype(RID prototype);
+	SK_API void             ClearValues(RID rid);
 	SK_API ResourceObject   Read(RID rid);
 	SK_API ResourceObject   Write(RID rid);
 

@@ -14,6 +14,7 @@ add_library(SkoreRuntime SHARED ${SKORE_RUNTIME_SOURCES} ${SKORE_RUNTIME_THIRDPA
 
 target_include_directories(SkoreRuntime PUBLIC Source)
 target_include_directories(SkoreRuntime PRIVATE Thirdparty/glad/include)
+target_include_directories(SkoreRuntime PRIVATE Thirdparty/misc/concurrentqueue)
 
 target_link_libraries(SkoreRuntime PRIVATE glfw)
 

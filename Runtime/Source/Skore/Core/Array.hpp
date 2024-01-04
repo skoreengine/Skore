@@ -154,8 +154,8 @@ namespace Skore
 	{
 		this->~Array();
 
-		m_First    = other.m_First;
-		m_Last           = other.m_Last;
+		m_First     = other.m_First;
+		m_Last      = other.m_Last;
 		m_Capacity  = other.m_Capacity;
 		m_Allocator = other.m_Allocator;
 
@@ -431,20 +431,20 @@ namespace Skore
 	SK_FINLINE void Array<T>::Swap(Array& other)
 	{
 		T* first    = m_First;
-		T* last           = m_Last;
-		T* capacity       = m_Capacity;
+		T* last     = m_Last;
+		T* capacity = m_Capacity;
 
 		Allocator* allocator = m_Allocator;
 
-		m_First    = other.m_First;
-		m_Last            = other.m_Last;
-		m_Capacity           = other.m_Capacity;
-		m_Allocator          = other.m_Allocator;
+		m_First     = other.m_First;
+		m_Last      = other.m_Last;
+		m_Capacity  = other.m_Capacity;
+		m_Allocator = other.m_Allocator;
 
-		other.m_First    = first;
+		other.m_First     = first;
 		other.m_Last      = last;
-		other.m_Capacity     = capacity;
-		other.m_Allocator    = allocator;
+		other.m_Capacity  = capacity;
+		other.m_Allocator = allocator;
 	}
 
 	template<typename T>
