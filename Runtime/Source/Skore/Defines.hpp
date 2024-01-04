@@ -83,6 +83,63 @@ typedef decltype(sizeof(0)) usize;
  bool operator!=(const StructName& b) const { return this->Handler != b.Handler; } \
 }
 
+
+#if defined _MSC_VER
+//unsigned int MAX
+#   define U8_MAX           0xffui8
+#   define U16_MAX          0xffffui16
+#   define U32_MAX          0xffffffffui32
+#   define U64_MAX          0xffffffffffffffffui64
+
+//signed int MIN
+#   define I8_MIN           (-127i8 - 1)
+#   define I16_MIN          (-32767i16 - 1)
+#   define I32_MIN          (-2147483647i32 - 1)
+#   define I64_MIN          (-9223372036854775807i64 - 1)
+
+//signed int MAX
+#   define I8_MAX           127i8
+#   define I16_MAX          32767i16
+#   define I32_MAX          2147483647i32
+#   define I64_MAX          9223372036854775807i64
+
+#   define F32_MAX          3.402823466e+38F
+#   define F64_MAX          1.7976931348623158e+308
+
+#   define F32_MIN          1.175494351e-38F
+#   define F64_MIN          2.2250738585072014e-308
+
+#   define F32_LOW          (-(F32_MAX))
+#   define F64_LOW          (-(F64_MAX))
+
+#elif defined __GNUC__
+# define I8_MIN		    (-128)
+# define I16_MIN		(-32767-1)
+# define I32_MIN		(-2147483647-1)
+# define I64_MIN	    INT64_MIN
+
+# define I8_MAX		    (127)
+# define I16_MAX		(32767)
+# define I32_MAX		(2147483647)
+# define I64_MAX		INT64_MAX
+
+/* Maximum of unsigned integral types.  */
+# define U8_MAX		    (255)
+# define U16_MAX		(65535)
+# define U32_MAX		(4294967295U)
+# define U64_MAX		18446744073709551615UL
+
+# define F32_MAX        __FLT_MAX__
+# define F64_MAX        __DBL_MAX__
+
+# define F32_MIN        __FLT_MIN__
+# define F64_MIN        __DBL_MIN__
+
+# define F32_LOW         (-(F32_MAX))
+# define F64_LOW         (-(F64_MAX))
+#endif
+
+
 #ifdef NDEBUG
 #  define SK_ASSERT(condition, message) ((void)0)
 #else
