@@ -214,7 +214,7 @@ namespace Skore::Tests
 
 	TEST_CASE("Repository::TestMultithreading")
 	{
-		usize tries = std::thread::hardware_concurrency() * 10;
+		usize tries = std::thread::hardware_concurrency() * 30;
 
 		Allocator* bkpDefault = GetDefaultAllocator();
 
@@ -237,7 +237,7 @@ namespace Skore::Tests
 		{
 			CreateTestResource();
 
-			u32 threads = std::thread::hardware_concurrency();
+			u32 threads = std::max(std::thread::hardware_concurrency(), 4u);
 
 			Array<std::thread> createThreads(threads);
 			for (int i = 0; i < threads; ++i)
