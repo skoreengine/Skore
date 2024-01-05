@@ -19,70 +19,86 @@ namespace Skore
 		Logger& Logger = Logger::GetLogger("Skore::App");
 	};
 
-	AppContext app = {};
+	AppContext* app = {};
 
-	void App::Init(const AppCreation& appCreation)
+	void App::Init()
 	{
 		Platform::Init();
 		Repository::Init();
-		RenderDevice::Init(appCreation);
+	}
+
+	void App::CreateContext(const AppContextCreation& contextCreation)
+	{
+		app = Alloc<AppContext>();
+
+		RenderDevice::Init(RenderDeviceType_OpenGL);
+		RenderDevice::CreateDevice(RenderAdapter{});
 
 		WindowFlags flags = 0;
-		if (appCreation.Fullscreen)
+		if (contextCreation.Maximized)
 		{
 			flags |= WindowFlags_Maximized;
 		}
 
-		app.Window    = Platform::CreateWindow(appCreation.Title, appCreation.Size, flags);
-		app.Swapchain = RenderDevice::CreateSwapchain(app.Window, appCreation.Vsync);
-		app.Running   = true;
-
-		app.Logger.Info("Skore {} initialized ", SK_VERSION);
-	}
-
-	bool App::Update()
-	{
-		Platform::ProcessEvents();
-
-		if (Platform::UserRequestedClose(app.Window))
+		if (contextCreation.Fullscreen)
 		{
-			app.Running = false;
+			flags |= WindowFlags_Fullscreen;
 		}
 
-		Extent         extent = Platform::GetWindowExtent(app.Window);
-		RenderCommands cmd    = RenderDevice::BeginFrame();
+		app->Window    = Platform::CreateWindow(contextCreation.Title, contextCreation.Size, flags);
+		app->Swapchain = RenderDevice::CreateSwapchain(app->Window, contextCreation.Vsync);
+		app->Running   = true;
 
-		RenderDevice::BeginRenderPass(cmd, BeginRenderPassInfo{
-			.Swapchain = app.Swapchain,
-			.ClearValues = {&app.ClearColor, 1}
-		});
-
-		ViewportInfo viewportInfo{};
-		viewportInfo.X        = 0.;
-		viewportInfo.Y        = 0.;
-		viewportInfo.Width    = (f32) extent.Width;
-		viewportInfo.Height   = (f32) extent.Height;
-		viewportInfo.MaxDepth = 0.;
-		viewportInfo.MinDepth = 1.;
-		RenderDevice::SetViewport(cmd, viewportInfo);
-
-		auto scissor = Rect{0, 0, extent.Width, extent.Height};
-		RenderDevice::SetScissor(cmd, scissor);
-
-		RenderDevice::EndRenderPass(cmd);
-		RenderDevice::EndFrame(app.Swapchain);
-
-		Repository::GarbageCollect();
-
-		return app.Running;
+		app->Logger.Info("Skore {} initialized ", SK_VERSION);
 	}
 
-	void App::Shutdown()
+	i32  App::Run()
 	{
-		Platform::DestroyWindow(app.Window);
-		Platform::Shutdown();
+		while(app->Running)
+		{
+			Platform::ProcessEvents();
+			if (Platform::UserRequestedClose(app->Window))
+			{
+				app->Running = false;
+			}
+
+			Extent         extent     = Platform::GetWindowExtent(app->Window);
+			RenderCommands cmd        = RenderDevice::BeginFrame();
+
+			RenderPass renderPass = RenderDevice::AcquireNextRenderPass(app->Swapchain);
+
+			RenderDevice::BeginRenderPass(cmd, BeginRenderPassInfo{
+				.RenderPass = renderPass,
+				.ClearValues = {&app->ClearColor, 1}
+			});
+
+			ViewportInfo viewportInfo{};
+			viewportInfo.X        = 0.;
+			viewportInfo.Y        = 0.;
+			viewportInfo.Width    = (f32) extent.Width;
+			viewportInfo.Height   = (f32) extent.Height;
+			viewportInfo.MaxDepth = 0.;
+			viewportInfo.MinDepth = 1.;
+			RenderDevice::SetViewport(cmd, viewportInfo);
+
+			auto scissor = Rect{0, 0, extent.Width, extent.Height};
+			RenderDevice::SetScissor(cmd, scissor);
+
+			RenderDevice::EndRenderPass(cmd);
+			RenderDevice::EndFrame({&app->Swapchain, 1});
+
+			Repository::GarbageCollect();
+		}
+
+		Platform::DestroyWindow(app->Window);
+		RenderDevice::Shutdown();
 		Repository::Shutdown();
+		Platform::Shutdown();
 		Reflection::Shutdown();
+
+		Destroy(app);
+
+		return 0;
 	}
 }
 

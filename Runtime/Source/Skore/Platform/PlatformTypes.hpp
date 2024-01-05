@@ -12,7 +12,8 @@ namespace Skore
 	enum WindowFlags_
 	{
 		WindowFlags_None          = 0,
-		WindowFlags_Maximized     = 1 << 0
+		WindowFlags_Maximized     = 1 << 0,
+		WindowFlags_Fullscreen    = 1 << 1
 	};
 
 	using WindowFlags = i32;

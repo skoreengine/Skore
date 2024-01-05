@@ -11,8 +11,10 @@ namespace Skore
 {
 	struct RenderDeviceAPI
 	{
-		void (*Init)();
-		void (*Shutdown)();
+		void                    (*Init)();
+		void                    (*Shutdown)();
+		Span<RenderAdapter>     (*GetAdapters)();
+		void                    (*CreateDevice)(RenderAdapter adapter);
 
 		RenderSwapchain         (*CreateSwapchain)(Window window, bool vsync);
 		void                    (*DestroySwapchain)(RenderSwapchain swapchain);
@@ -25,6 +27,7 @@ namespace Skore
 		void                    (*SetScissor)(RenderCommands cmd, const Rect& rect);
 
 		RenderCommands          (*BeginFrame)();
-		void                    (*EndFrame)(RenderSwapchain swapchain);
+		RenderPass              (*AcquireNextRenderPass)(RenderSwapchain swapchain);
+		void                    (*EndFrame)(const Span<RenderSwapchain>& swapchains);
 	};
 }

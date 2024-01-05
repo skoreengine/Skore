@@ -5,8 +5,15 @@
 
 namespace Skore::GL
 {
+	struct GLRenderPass
+	{
+		u32    FramebufferId = 0;
+		Window WindowContext{};
+	};
+
 	struct GLSwapchain
 	{
 		Window Window{};
+		GLRenderPass RenderPass{};
 	};
 }

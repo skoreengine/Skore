@@ -10,19 +10,20 @@
 
 namespace Skore
 {
+	SK_HANDLER(RenderAdapter);
 	SK_HANDLER(RenderSwapchain);
 	SK_HANDLER(RenderPass);
 	SK_HANDLER(RenderCommands);
 	SK_HANDLER(RenderPipelineState);
-
 
 	enum RenderDeviceType_
 	{
 		RenderDeviceType_None   = 0,
 		RenderDeviceType_Vulkan = 1,
 		RenderDeviceType_OpenGL = 2,
-		RenderDeviceType_D3D12  = 2,
-		RenderDeviceType_Metal  = 3
+		RenderDeviceType_D3D12  = 3,
+		RenderDeviceType_Metal  = 4,
+		RenderDeviceType_WebGPU = 5
 	};
 
 	enum CompareOp_
@@ -83,9 +84,15 @@ namespace Skore
 	struct BeginRenderPassInfo
 	{
 		RenderPass      RenderPass{};
-		RenderSwapchain Swapchain{};
 		Span<Vec4>      ClearValues{};
 		Vec2            DepthStencil{1.0, 0.0};
+	};
+
+	struct DeviceFeatures
+	{
+		bool RaytraceSupported{};
+		bool BindlessSupported{};
+		bool MultiDrawIndirectSupported{};
 	};
 
 	struct GraphicsPipelineCreation

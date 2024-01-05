@@ -65,6 +65,31 @@ namespace Skore
 		return 0;
 	}
 
+	template<typename T>
+	inline constexpr void Swap(T& a, T& b)
+	{
+		T temp = (T&&)a;
+		a = (T&&)b;
+		b = (T&&)temp;
+	}
+
+	//TODO - replace by a better algorithm like Introsort
+	template<typename T, typename F>
+	inline void Sort(T* begin, T* end, const F& comp)
+	{
+		usize size = (end - begin);
+		for (int i = 0; i < size - 1; ++i)
+		{
+			for (int j = 0; j < size - i - 1; ++j)
+			{
+				if (comp(begin[j], begin[j + 1]))
+				{
+					Swap(begin[j], begin[j + 1]);
+				}
+			}
+		}
+	}
+
 	template<typename Element>
 	inline u64 HexTo64(const BasicStringView<Element>& str) {
 		u64 res = 0;

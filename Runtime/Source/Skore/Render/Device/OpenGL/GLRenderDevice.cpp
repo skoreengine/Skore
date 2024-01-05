@@ -26,6 +26,11 @@ namespace Skore::GL
 		Platform::InitOpenGL();
 	}
 
+	void CreateDevice(RenderAdapter adapter)
+	{
+		//do nothing on OpenGL
+	}
+
 	void Shutdown()
 	{
 
@@ -42,7 +47,13 @@ namespace Skore::GL
 		gl.GladLoaded = true;
 #endif
 		Platform::SetVSync(vsync);
-		return {new GLSwapchain{window}};
+		return {new GLSwapchain{window, GLRenderPass{0, window}}};
+	}
+
+	RenderPass AcquireNextRenderPass(RenderSwapchain swapchain)
+	{
+		GLSwapchain* glSwapchain = static_cast<GLSwapchain*>(swapchain.Handler);
+		return {&glSwapchain->RenderPass};
 	}
 
 	void DestroySwapchain(RenderSwapchain swapchain)
@@ -62,16 +73,18 @@ namespace Skore::GL
 
 	void BeginRenderPass(RenderCommands cmd, const BeginRenderPassInfo& beginRenderPassInfo)
 	{
-		if (beginRenderPassInfo.Swapchain)
-		{
-			Vec4 cleanColor = beginRenderPassInfo.ClearValues[0];
-			glClearColor(cleanColor.X, cleanColor.Y, cleanColor.Z, cleanColor.W);
-			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		}
-		else if (beginRenderPassInfo.RenderPass)
-		{
+		GLRenderPass* glRenderPass = static_cast<GLRenderPass*>(beginRenderPassInfo.RenderPass.Handler);
 
+		if (glRenderPass->FramebufferId == 0)
+		{
+			Platform::MakeContextCurrent(glRenderPass->WindowContext);
 		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, glRenderPass->FramebufferId);
+
+		Vec4 cleanColor = beginRenderPassInfo.ClearValues[0];
+		glClearColor(cleanColor.X, cleanColor.Y, cleanColor.Z, cleanColor.W);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	}
 
 	void EndRenderPass(RenderCommands cmd)
@@ -94,9 +107,14 @@ namespace Skore::GL
 		return {};
 	}
 
-	void EndFrame(RenderSwapchain swapchain)
+	void EndFrame(const Span<RenderSwapchain>& swapchains)
 	{
-		Platform::SwapBuffers(static_cast<GLSwapchain*>(swapchain.Handler)->Window);
+		for(const RenderSwapchain& swapchain : swapchains)
+		{
+			GLSwapchain* glSwapchain = static_cast<GLSwapchain*>(swapchain.Handler);
+			Platform::MakeContextCurrent(glSwapchain->Window);
+			Platform::SwapBuffers(glSwapchain->Window);
+		}
 	}
 
 }
@@ -107,6 +125,7 @@ namespace Skore
 	{
 		renderDeviceApi.Init                         = GL::Init;
 		renderDeviceApi.Shutdown                     = GL::Shutdown;
+		renderDeviceApi.CreateDevice                 = GL::CreateDevice;
 		renderDeviceApi.CreateSwapchain              = GL::CreateSwapchain;
 		renderDeviceApi.CreateGraphicsPipelineState  = GL::CreateGraphicsPipelineState;
 		renderDeviceApi.DestroyGraphicsPipelineState = GL::DestroyGraphicsPipelineState;
@@ -116,6 +135,7 @@ namespace Skore
 		renderDeviceApi.SetViewport                  = GL::SetViewport;
 		renderDeviceApi.SetScissor                   = GL::SetScissor;
 		renderDeviceApi.BeginFrame                   = GL::BeginFrame;
+		renderDeviceApi.AcquireNextRenderPass        = GL::AcquireNextRenderPass;
 		renderDeviceApi.EndFrame                     = GL::EndFrame;
 	}
 }

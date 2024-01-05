@@ -8,18 +8,20 @@
 
 namespace Skore
 {
-	struct AppCreation
+	struct AppContextCreation
 	{
 		String Title      = "Skore";
 		UVec2  Size       = UVec2{1920, 1080};
+		bool   Maximized  = false;
 		bool   Fullscreen = false;
 		bool   Vsync      = true;
+
 	};
 
 	namespace App
 	{
-		void SK_API Init(const AppCreation& appCreation);
-		bool SK_API Update();
-		void SK_API Shutdown();
+		void SK_API Init();
+		void SK_API CreateContext(const AppContextCreation& contextCreation);
+		i32  SK_API Run();
 	}
 }

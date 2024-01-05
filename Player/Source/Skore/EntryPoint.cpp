@@ -7,13 +7,12 @@ using namespace Skore;
 
 int main()
 {
-	App::Init(AppCreation{
-		.Title = "Skore"
+	App::Init();
+
+	App::CreateContext(AppContextCreation{
+		.Title = "Skore",
+		.Maximized = true
 	});
 
-
-	while(App::Update()) {}
-	App::Shutdown();
-
-	return 0;
+	return App::Run();
 }

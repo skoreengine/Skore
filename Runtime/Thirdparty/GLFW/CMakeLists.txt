@@ -77,31 +77,6 @@ if (GLFW_BUILD_X11)
 endif()
 
 #--------------------------------------------------------------------
-# Apply Microsoft C runtime library option
-# This is here because it also applies to tests and examples
-#--------------------------------------------------------------------
-if (MSVC AND NOT USE_MSVC_RUNTIME_LIBRARY_DLL)
-    if (CMAKE_VERSION VERSION_LESS 3.15)
-        foreach (flag CMAKE_C_FLAGS
-                      CMAKE_C_FLAGS_DEBUG
-                      CMAKE_C_FLAGS_RELEASE
-                      CMAKE_C_FLAGS_MINSIZEREL
-                      CMAKE_C_FLAGS_RELWITHDEBINFO)
-
-            if (flag MATCHES "/MD")
-                string(REGEX REPLACE "/MD" "/MT" ${flag} "${${flag}}")
-            endif()
-            if (flag MATCHES "/MDd")
-                string(REGEX REPLACE "/MDd" "/MTd" ${flag} "${${flag}}")
-            endif()
-
-        endforeach()
-    else()
-        set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
-endif()
-
-#--------------------------------------------------------------------
 # Add subdirectories
 #--------------------------------------------------------------------
 add_subdirectory(src)

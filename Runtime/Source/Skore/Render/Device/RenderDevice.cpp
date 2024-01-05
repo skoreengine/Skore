@@ -10,14 +10,23 @@ namespace Skore
 
 	void RegisterOpenGL(RenderDeviceAPI& renderDeviceApi);
 
-	void RenderDevice::Init(const AppCreation& creation)
+	void RenderDevice::Init(const RenderDeviceType& renderDeviceType)
 	{
-//		if (creation.Device == RenderDeviceType_OpenGL)
-//		{
-//
-//		}
-		RegisterOpenGL(renderDeviceApi);
+		if (renderDeviceType == RenderDeviceType_OpenGL)
+		{
+			RegisterOpenGL(renderDeviceApi);
+		}
 		renderDeviceApi.Init();
+	}
+
+	Span<RenderAdapter> RenderDevice::GetAdapters()
+	{
+		return renderDeviceApi.GetAdapters();
+	}
+
+	void RenderDevice::CreateDevice(RenderAdapter adapter)
+	{
+		renderDeviceApi.CreateDevice(adapter);
 	}
 
 	void RenderDevice::Shutdown()
@@ -70,8 +79,13 @@ namespace Skore
 		return renderDeviceApi.BeginFrame();
 	}
 
-	void RenderDevice::EndFrame(RenderSwapchain swapchain)
+	RenderPass RenderDevice::AcquireNextRenderPass(RenderSwapchain swapchain)
 	{
-		renderDeviceApi.EndFrame(swapchain);
+		return renderDeviceApi.AcquireNextRenderPass(swapchain);
+	}
+
+	void RenderDevice::EndFrame(const Span<RenderSwapchain>& swapchains)
+	{
+		renderDeviceApi.EndFrame(swapchains);
 	}
 }
