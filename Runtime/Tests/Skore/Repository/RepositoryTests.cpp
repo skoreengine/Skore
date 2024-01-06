@@ -150,12 +150,9 @@ namespace Skore::Tests
 			Repository::GarbageCollect();
 			CHECK(nr > GetAllocationNum());
 
-			{
-				Repository::ClearValues(rid);
-				ResourceObject read = Repository::Read(rid);
-				CHECK(!read.Has("IntValue"));
-				CHECK(!read.Has("StringValue"));
-			}
+			Repository::DestroyResource(rid);
+			Repository::GarbageCollect();
+			CHECK(Repository::IsAlive(rid) == false);
 		}
 
 		Repository::Shutdown();
@@ -266,9 +263,19 @@ namespace Skore::Tests
 
 		{
 			ResourceObject write = Repository::Write(rid);
-			write.SetSubobject(TestResource_Subobject, rid);
+			write.SetSubobject(TestResource_Subobject, subobject);
 			write.Commit();
 		}
+
+		{
+			ResourceObject read = Repository::Read(rid);
+			CHECK(read.GetSubobject(TestResource_Subobject) == subobject);
+		}
+
+		Repository::DestroyResource(rid);
+		Repository::GarbageCollect();
+		CHECK(Repository::IsAlive(rid) == false);
+		CHECK(Repository::IsAlive(subobject) == false);
 
 		Repository::Shutdown();
 		Reflection::Shutdown();

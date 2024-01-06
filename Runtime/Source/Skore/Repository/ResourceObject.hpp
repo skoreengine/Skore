@@ -63,8 +63,10 @@ namespace Skore
 		}
 
 		void SetSubobject(u32 index, RID subobject);
-
 		void SetSubobject(const StringView& name, RID subobject);
+
+		RID GetSubobject(u32 index);
+		RID GetSubobject(const StringView& name);
 
 
 		explicit operator bool() const

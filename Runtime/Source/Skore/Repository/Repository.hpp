@@ -21,7 +21,10 @@ namespace Skore::Repository
 	SK_API RID              CreateResource(TypeID typeId);
 	SK_API RID              CreateFromPrototype(RID prototype);
 	SK_API void             ClearValues(RID rid);
+	SK_API void             DestroyResource(RID rid);
+	SK_API RID              CloneResource(RID rid);
 	SK_API ResourceObject   Read(RID rid);
 	SK_API ResourceObject   Write(RID rid);
+	SK_API bool             IsAlive(RID rid);
 
 }

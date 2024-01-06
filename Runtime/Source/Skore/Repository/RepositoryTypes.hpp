@@ -51,9 +51,13 @@ namespace Skore
 
 	enum ResourceFieldType_
 	{
-		ResourceFieldType_Undefined = 0,
-		ResourceFieldType_Value     = 1,
-		ResourceFieldType_SubObject = 2
+		ResourceFieldType_Undefined    = 0,
+		ResourceFieldType_Value        = 1,
+		ResourceFieldType_SubObject    = 2,
+		ResourceFieldType_SubObjectSet = 3,
+		ResourceFieldType_Reference    = 4,
+		ResourceFieldType_ReferenceSet = 5,
+		ResourceFieldType_Buffer       = 6
 	};
 
 	typedef u32 ResourceFieldType;
