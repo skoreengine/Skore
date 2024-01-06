@@ -347,7 +347,7 @@ namespace Skore::Tests
 
 				readThreads[i] = std::thread([&]()
 				{
-					for (int j = 0; j < tries * 10; ++j)
+					for (int j = 0; j < tries * 10 || !check; ++j)
 					{
 						ResourceObject object = Repository::Read(rid);
 						if (object)
@@ -356,6 +356,13 @@ namespace Skore::Tests
 							{
 								check = true;
 							}
+						}
+
+						//never gets the value
+						if (j > tries * 10000)
+						{
+							CHECK(false);
+							break;
 						}
 					}
 				});
