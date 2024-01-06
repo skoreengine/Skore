@@ -18,49 +18,54 @@ namespace Skore
 
 		virtual ~ResourceObject();
 
-		inline ConstCPtr Get(const StringView& name) const
+		inline ConstCPtr GetValue(const StringView& name) const
 		{
-			return GetPtr(name);
+			return GetValuePtr(name);
 		}
 
-		inline  ConstCPtr Get(u32 index) const
+		inline  ConstCPtr GetValue(u32 index) const
 		{
-			return GetPtr(index);
-		}
-
-		template<typename T>
-		const T& Get(const StringView& name) const
-		{
-			return *static_cast<const T*>(GetPtr(name));
+			return GetValuePtr(index);
 		}
 
 		template<typename T>
-		const T& Get(u32 index) const
+		const T& GetValue(const StringView& name) const
 		{
-			return *static_cast< const T*>(GetPtr(index));
+			return *static_cast<const T*>(GetValuePtr(name));
 		}
 
 		template<typename T>
-		void Set(const StringView& name, const T& value)
+		const T& GetValue(u32 index) const
 		{
-			SetPtr(name, &value, GetTypeID<T>());
+			return *static_cast< const T*>(GetValuePtr(index));
 		}
 
 		template<typename T>
-		void Set(u32 index, const T& value)
+		void SetValue(const StringView& name, const T& value)
 		{
-			SetPtr(index, &value, GetTypeID<T>());
+			SetValuePtr(name, &value, GetTypeID<T>());
 		}
 
-		void Set(const StringView& name, ConstCPtr value, TypeID typeId)
+		template<typename T>
+		void SetValue(u32 index, const T& value)
 		{
-			SetPtr(name, value, typeId);
+			SetValuePtr(index, &value, GetTypeID<T>());
 		}
 
-		void Set(u32 index, ConstCPtr value, TypeID typeId)
+		void SetValue(const StringView& name, ConstCPtr value, TypeID typeId)
 		{
-			SetPtr(index, &value, typeId);
+			SetValuePtr(name, value, typeId);
 		}
+
+		void SetValue(u32 index, ConstCPtr value, TypeID typeId)
+		{
+			SetValuePtr(index, &value, typeId);
+		}
+
+		void SetSubobject(u32 index, RID subobject);
+
+		void SetSubobject(const StringView& name, RID subobject);
+
 
 		explicit operator bool() const
 		{
@@ -69,12 +74,12 @@ namespace Skore
 
 		bool Has(u32 index) const
 		{
-			return GetPtr(index) != nullptr;
+			return GetValuePtr(index) != nullptr;
 		}
 
 		bool Has(const StringView& name) const
 		{
-			return GetPtr(name) != nullptr;
+			return GetValuePtr(name) != nullptr;
 		}
 
 		void Commit();
@@ -83,10 +88,10 @@ namespace Skore
 		ResourceData*    m_ReadData;
 		ResourceData*    m_WriteData;
 
-		ConstCPtr GetPtr(const StringView& name) const;
-		ConstCPtr GetPtr(u32 index) const;
-		void SetPtr(const StringView& name, ConstCPtr ptr, TypeID typeId);
-		void SetPtr(u32 index, ConstCPtr ptr, TypeID typeId);
+		ConstCPtr GetValuePtr(const StringView& name) const;
+		ConstCPtr GetValuePtr(u32 index) const;
+		void SetValuePtr(const StringView& name, ConstCPtr ptr, TypeID typeId);
+		void SetValuePtr(u32 index, ConstCPtr ptr, TypeID typeId);
 	};
 
 }

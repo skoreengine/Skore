@@ -49,11 +49,21 @@ namespace Skore
 		}
 	};
 
+	enum ResourceFieldType_
+	{
+		ResourceFieldType_Undefined = 0,
+		ResourceFieldType_Value     = 1,
+		ResourceFieldType_SubObject = 2
+	};
+
+	typedef u32 ResourceFieldType;
+
 	struct ResourceFieldCreation
 	{
-		u32         Index{U32_MAX};
-		StringView  Name{};
-		TypeID      Type{};
+		u32               Index{U32_MAX};
+		StringView        Name{};
+		ResourceFieldType Type{ResourceFieldType_Value};
+		TypeID            FieldTypeId{};
 	};
 
 	struct ResourceTypeCreation

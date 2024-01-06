@@ -16,6 +16,8 @@ namespace Skore
 		void (*MemFree)(CPtr alloc, CPtr ptr, usize bytes);
 	};
 
+	typedef Allocator* AllocatorPtr;
+
 	SK_API Allocator* GetDefaultAllocator();
 	SK_API void SetDefaultAllocator(const Allocator& allocator);
 

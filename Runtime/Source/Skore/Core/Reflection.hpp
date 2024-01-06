@@ -258,6 +258,8 @@ namespace Skore
 		Array<AttributeHandler*>                      m_AttributeArray;
 	};
 
+	typedef TypeHandler* TypeHandlerPtr;
+
 	//native impl
 
 	template<typename Owner, typename Type>

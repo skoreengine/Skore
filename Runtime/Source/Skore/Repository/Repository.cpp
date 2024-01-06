@@ -25,36 +25,42 @@ namespace Skore::Repository
 namespace Skore
 {
 	struct ResourceStorage;
+	typedef ResourceStorage* ResourceStoragePtr;
 
 	struct ResourceField
 	{
-		String Name{};
-		TypeHandler* Type{};
-		usize Index{};
-		usize Offset{};
+		String            Name{};
+		usize             Index{};
+		ResourceFieldType FieldType{};
+		TypeHandlerPtr    TypeHandler{};
+		usize             Offset{};
 	};
+
+	typedef ResourceField* ResourceFieldPtr;
 
 	struct ResourceType
 	{
 		TypeID                                    TypeId;
 		usize                                     Size;
 		HashMap<String, SharedPtr<ResourceField>> FieldsByName;
-		Array<ResourceField*>                     FieldsByIndex;
+		Array<ResourceFieldPtr>                   FieldsByIndex;
 	};
 
 	struct ResourceData
 	{
-		ResourceStorage* Storage{};
-		CPtr Memory{};
-		Array<CPtr> Fields{};
+		ResourceStoragePtr Storage{};
+		CPtr               Memory{};
+		Array<CPtr>        Fields{};
 	};
+
+	typedef ResourceData* ResourceDataPtr;
 
 	struct ResourceStorage
 	{
 		RID Rid;
 		ResourceType* ResourceType{};
-		std::atomic<ResourceData*> Data;
-		ResourceStorage* Prototype{};
+		std::atomic<ResourceDataPtr> Data;
+		ResourceStoragePtr           Prototype{};
 	};
 
 	struct ResourcePage
@@ -70,7 +76,7 @@ namespace Skore
 
 	struct RepositoryContext
 	{
-		Allocator* Allocator;
+		AllocatorPtr Allocator;
 		HashMap<TypeID, SharedPtr<ResourceType>> ResourceTypes{};
 
 		std::atomic_size_t Counter{};
@@ -128,15 +134,31 @@ namespace Skore
 
 		for (const ResourceFieldCreation& resourceFieldCreation : resourceTypeCreation.Fields)
 		{
-			TypeHandler* type = Reflection::FindTypeById(resourceFieldCreation.Type);
-			SK_ASSERT(type, "Type not found");
-			auto it = resourceType->FieldsByName.Emplace(resourceFieldCreation.Name, MakeShared<ResourceField>(resourceFieldCreation.Name, type, resourceFieldCreation.Index)).First;
+			SK_ASSERT(resourceFieldCreation.Index < resourceTypeCreation.Fields.Size(), "The index value cannot be greater than the number of elements");
+
+			auto it = resourceType->FieldsByName.Emplace(resourceFieldCreation.Name, MakeShared<ResourceField>(resourceFieldCreation.Name,
+				resourceFieldCreation.Index,
+				resourceFieldCreation.Type)).First;
+
 			SK_ASSERT(!resourceType->FieldsByIndex[resourceFieldCreation.Index], "Index duplicated");
 			resourceType->FieldsByIndex[resourceFieldCreation.Index] = it->Second.Get();
 
-			//TODO improve alignment
-			it->Second->Offset = resourceType->Size;
-			resourceType->Size += type->GetTypeInfo().Size;
+			if (resourceFieldCreation.Type == ResourceFieldType_Value)
+			{
+				it->Second->TypeHandler = Reflection::FindTypeById(resourceFieldCreation.FieldTypeId);
+				SK_ASSERT(it->Second->TypeHandler, "Type not found");
+				it->Second->Offset = resourceType->Size;
+				if (it->Second->TypeHandler)
+				{
+					//TODO improve alignment
+					resourceType->Size += it->Second->TypeHandler->GetTypeInfo().Size;
+				}
+			}
+			else if (resourceFieldCreation.Type == ResourceFieldType_SubObject)
+			{
+				it->Second->Offset = resourceType->Size;
+				resourceType->Size += sizeof(RID);
+			}
 		}
 
 		repository.ResourceTypes.Emplace(resourceTypeCreation.TypeId, Traits::Move(resourceType));
@@ -176,9 +198,9 @@ namespace Skore
 			{
 				for (int i = 0; i < data->Fields.Size(); ++i)
 				{
-					if (data->Fields[i] != nullptr)
+					if (data->Fields[i] != nullptr && data->Storage->ResourceType->FieldsByIndex[i]->TypeHandler)
 					{
-						data->Storage->ResourceType->FieldsByIndex[i]->Type->Destructor(data->Fields[i]);
+						data->Storage->ResourceType->FieldsByIndex[i]->TypeHandler->Destructor(data->Fields[i]);
 						data->Fields[i] = nullptr;
 					}
 				}
@@ -251,7 +273,7 @@ namespace Skore
 				if (storageData->Fields[i] != nullptr)
 				{
 					data->Fields[i] = static_cast<char*>(memory) + storage->ResourceType->FieldsByIndex[i]->Offset;
-					storage->ResourceType->FieldsByIndex[i]->Type->Copy(storageData->Fields[i], data->Fields[i]);
+					storage->ResourceType->FieldsByIndex[i]->TypeHandler->Copy(storageData->Fields[i], data->Fields[i]);
 				}
 			}
 		}
@@ -279,7 +301,7 @@ namespace Skore
 				{
 					if (data->Fields[i] != nullptr)
 					{
-						data->Storage->ResourceType->FieldsByIndex[i]->Type->Destructor(data->Fields[i]);
+						data->Storage->ResourceType->FieldsByIndex[i]->TypeHandler->Destructor(data->Fields[i]);
 						data->Fields[i] = nullptr;
 					}
 				}
@@ -293,49 +315,70 @@ namespace Skore
 	{
 	}
 
-	ConstCPtr ResourceObject::GetPtr(const StringView& name) const
+	ConstCPtr ResourceObject::GetValuePtr(const StringView& name) const
 	{
 		if (auto it = m_ReadData->Storage->ResourceType->FieldsByName.Find(name))
 		{
-			return GetPtr(it->Second->Index);
+			return GetValuePtr(it->Second->Index);
 		}
 		return nullptr;
 	}
 
-	ConstCPtr ResourceObjectGet(ResourceData* data, u32 index)
+	ConstCPtr ResourceObjectGetValue(ResourceData* data, u32 index)
 	{
 		ConstCPtr ptr = data->Fields[index];
 		if (!ptr && data->Storage->Prototype)
 		{
-			return ResourceObjectGet(data->Storage->Prototype->Data, index);
+			return ResourceObjectGetValue(data->Storage->Prototype->Data, index);
 		}
 		return ptr;
 	}
 
-	ConstCPtr ResourceObject::GetPtr(u32 index) const
+	ConstCPtr ResourceObject::GetValuePtr(u32 index) const
 	{
-		return ResourceObjectGet(m_ReadData, index);
+		return ResourceObjectGetValue(m_ReadData, index);
 	}
 
-	void ResourceObject::SetPtr(const StringView& name, ConstCPtr ptr, TypeID typeId)
+	void ResourceObject::SetValuePtr(const StringView& name, ConstCPtr ptr, TypeID typeId)
 	{
 		if (auto it = m_WriteData->Storage->ResourceType->FieldsByName.Find(name))
 		{
-			SetPtr(it->Second->Index, ptr, typeId);
+			SetValuePtr(it->Second->Index, ptr, typeId);
 		}
 	}
 
-	void ResourceObject::SetPtr(u32 index, ConstCPtr ptr, TypeID typeId)
+	void ResourceObject::SetValuePtr(u32 index, ConstCPtr ptr, TypeID typeId)
 	{
 		ResourceField* field = m_WriteData->Storage->ResourceType->FieldsByIndex[index];
-		SK_ASSERT(field->Type->GetTypeInfo().TypeId == typeId, "type is not the same");
+		SK_ASSERT(field->FieldType == ResourceFieldType_Value, "Field is not ResourceFieldType_Value");
+		SK_ASSERT(field->TypeHandler->GetTypeInfo().TypeId == typeId, "type is not the same");
 
 		if (m_WriteData->Fields[index] == nullptr)
 		{
 			m_WriteData->Fields[index] = static_cast<char*>(m_WriteData->Memory) + field->Offset;
 		}
 
-		field->Type->Copy(ptr, m_WriteData->Fields[index]);
+		field->TypeHandler->Copy(ptr, m_WriteData->Fields[index]);
+	}
+
+	void ResourceObject::SetSubobject(u32 index, RID subobject)
+	{
+		ResourceField* field = m_WriteData->Storage->ResourceType->FieldsByIndex[index];
+		SK_ASSERT(field->FieldType == ResourceFieldType_SubObject, "Field is not ResourceFieldType_SubObject");
+
+		if (m_WriteData->Fields[index] == nullptr)
+		{
+			m_WriteData->Fields[index] = static_cast<char*>(m_WriteData->Memory) + field->Offset;
+		}
+		new (PlaceHolder(), m_WriteData->Fields[index]) RID{subobject};
+	}
+
+	void ResourceObject::SetSubobject(const StringView& name, RID subobject)
+	{
+		if (auto it = m_WriteData->Storage->ResourceType->FieldsByName.Find(name))
+		{
+			SetSubobject(it->Second->Index, subobject);
+		}
 	}
 
 	void ResourceObject::Commit()
@@ -362,4 +405,6 @@ namespace Skore
 			Repository::DestroyData(m_WriteData);
 		}
 	}
+
+
 }
