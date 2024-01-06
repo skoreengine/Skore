@@ -6,6 +6,7 @@
 #include <queue>
 #include "Repository.hpp"
 #include "Skore/Core/HashMap.hpp"
+#include "Skore/Core/HashSet.hpp"
 #include "Skore/Core/SharedPtr.hpp"
 #include "Skore/Core/Reflection.hpp"
 #include "ResourceObject.hpp"
@@ -169,7 +170,7 @@ namespace Skore
 			else if (resourceFieldCreation.Type == ResourceFieldType_SubObjectSet)
 			{
 				it->Second->Offset = resourceType->Size;
-				resourceType->Size += sizeof(RID);
+				resourceType->Size += sizeof(HashSet<RID>);
 			}
 		}
 

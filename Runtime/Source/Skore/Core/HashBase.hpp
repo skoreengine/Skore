@@ -5,7 +5,6 @@
 
 namespace Skore
 {
-
 	template<typename Key, typename Value>
 	struct HashNode
 	{
@@ -15,6 +14,16 @@ namespace Skore
 		HashNode* Next;
 		HashNode* Prev;
 	};
+
+	template<typename Key>
+	struct HashNode<Key, void>
+	{
+		const Key First;
+
+		HashNode* Next;
+		HashNode* Prev;
+	};
+
 
 	template<typename T>
 	struct HashIterator

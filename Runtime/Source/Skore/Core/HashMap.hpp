@@ -62,9 +62,9 @@ namespace Skore
 	private:
 		void ReHash();
 
-		usize        m_size{};
-		Array<Node*> m_buckets{};
-		Allocator* m_allocator = GetDefaultAllocator();
+		usize        m_Size{};
+		Array<Node*> m_Buckets{};
+		AllocatorPtr m_Allocator = GetDefaultAllocator();
 	};
 
 	template<typename Key, typename Value>
@@ -74,50 +74,50 @@ namespace Skore
 	}
 
 	template<typename Key, typename Value>
-	SK_FINLINE HashMap<Key, Value>::HashMap(const HashMap& other) : m_size(other.m_size)
+	SK_FINLINE HashMap<Key, Value>::HashMap(const HashMap& other) : m_Size(other.m_Size)
 	{
-		if (other.m_buckets.Empty()) return;
-		m_buckets.Resize(other.m_buckets.Size());
+		if (other.m_Buckets.Empty()) return;
+		m_Buckets.Resize(other.m_Buckets.Size());
 
-		for (Node* it = *other.m_buckets.begin(); it != nullptr; it = it->Next)
+		for (Node* it = *other.m_Buckets.begin(); it != nullptr; it = it->Next)
 		{
-			Node* newNode = new(PlaceHolder(), m_allocator->MemAlloc(m_allocator->Alloc, sizeof(Node))) Node{it->First, it->Second};
+			Node* newNode = new(PlaceHolder(), m_Allocator->MemAlloc(m_Allocator->Alloc, sizeof(Node))) Node{it->First, it->Second};
 			newNode->Next = newNode->Prev = nullptr;
-			HashNodeInsert(newNode, Hash<Key>::Value(it->First), m_buckets.Data(), m_buckets.Size() - 1);
+			HashNodeInsert(newNode, Hash<Key>::Value(it->First), m_Buckets.Data(), m_Buckets.Size() - 1);
 		}
 	}
 
 	template<typename Key, typename Value>
 	SK_FINLINE HashMap<Key, Value>::HashMap(HashMap&& other) noexcept
 	{
-		m_buckets.Swap(other.m_buckets);
-		other.m_size = 0;
+		m_Buckets.Swap(other.m_Buckets);
+		other.m_Size = 0;
 	}
 
 	template<typename Key, typename Value>
 	SK_FINLINE void HashMap<Key, Value>::Clear()
 	{
-		if (m_buckets.Empty()) return;
+		if (m_Buckets.Empty()) return;
 
-		Node* it = *m_buckets.begin();
+		Node* it = *m_Buckets.begin();
 		while (it)
 		{
 			Node* next = it->Next;
 			it->~HashNode<Key, Value>();
-			m_allocator->MemFree(m_allocator->Alloc, it, sizeof(HashNode<Key, Value>));
+			m_Allocator->MemFree(m_Allocator->Alloc, it, sizeof(HashNode<Key, Value>));
 			it = next;
 		}
 
-		m_buckets.Clear();
-		m_buckets.ShrinkToFit();
-		m_size = 0;
+		m_Buckets.Clear();
+		m_Buckets.ShrinkToFit();
+		m_Size = 0;
 	}
 
 	template<typename Key, typename Value>
 	SK_FINLINE HashMap<Key, Value>::Iterator HashMap<Key, Value>::begin()
 	{
 		Iterator it;
-		it.Node = !m_buckets.Empty() ? *m_buckets.begin() : nullptr;
+		it.Node = !m_Buckets.Empty() ? *m_Buckets.begin() : nullptr;
 		return it;
 	}
 
@@ -133,7 +133,7 @@ namespace Skore
 	SK_FINLINE HashMap<Key, Value>::ConstIterator HashMap<Key, Value>::begin() const
 	{
 		Iterator it;
-		it.Node = !m_buckets.Empty() ? *m_buckets.begin() : nullptr;
+		it.Node = !m_Buckets.Empty() ? *m_Buckets.begin() : nullptr;
 		return it;
 	}
 
@@ -148,25 +148,25 @@ namespace Skore
 	template<typename Key, typename Value>
 	SK_FINLINE bool HashMap<Key, Value>::Empty() const
 	{
-		return m_size == 0;
+		return m_Size == 0;
 	}
 
 	template<typename Key, typename Value>
 	SK_FINLINE usize HashMap<Key, Value>::Size() const
 	{
-		return m_size;
+		return m_Size;
 	}
 
 	template<typename Key, typename Value>
 	template<typename ParamKey>
 	SK_FINLINE HashMap<Key, Value>::Iterator HashMap<Key, Value>::Find(const ParamKey& key)
 	{
-		if (m_buckets.Empty()) return {};
+		if (m_Buckets.Empty()) return {};
 
-		const usize bucket = Hash<Key>::Value(key) & (m_buckets.Size() - 2);
+		const usize bucket = Hash<Key>::Value(key) & (m_Buckets.Size() - 2);
 
 		typedef Node* NodePtr;
-		for (NodePtr it = m_buckets[bucket], end = m_buckets[bucket + 1]; it != end; it = it->Next)
+		for (NodePtr it = m_Buckets[bucket], end = m_Buckets[bucket + 1]; it != end; it = it->Next)
 		{
 			if (it->First == key)
 			{
@@ -181,12 +181,12 @@ namespace Skore
 	template<typename ParamKey>
 	SK_FINLINE HashMap<Key, Value>::ConstIterator HashMap<Key, Value>::Find(const ParamKey& key) const
 	{
-		if (m_buckets.Empty()) return {};
+		if (m_Buckets.Empty()) return {};
 
-		const usize bucket = Hash<Key>::Value(key) & (m_buckets.Size() - 2);
+		const usize bucket = Hash<Key>::Value(key) & (m_Buckets.Size() - 2);
 
 		typedef Node* NodePtr;
-		for (NodePtr it = m_buckets[bucket], end = m_buckets[bucket + 1]; it != end; it = it->Next)
+		for (NodePtr it = m_Buckets[bucket], end = m_Buckets[bucket + 1]; it != end; it = it->Next)
 		{
 			if (it->First == key)
 			{
@@ -208,17 +208,17 @@ namespace Skore
 			return result;
 		}
 
-		Node* newNode = new(PlaceHolder(), m_allocator->MemAlloc(m_allocator->Alloc, sizeof(Node))) Node{p.First, p.Second};
+		Node* newNode = new(PlaceHolder(), m_Allocator->MemAlloc(m_Allocator->Alloc, sizeof(Node))) Node{p.First, p.Second};
 		newNode->Next = newNode->Prev = nullptr;
 
-		if (m_buckets.Empty())
+		if (m_Buckets.Empty())
 		{
-			m_buckets.Resize(9);
+			m_Buckets.Resize(9);
 		}
 
-		HashNodeInsert(newNode, Hash<Key>::Value(p.First), m_buckets.Data(), m_buckets.Size() - 1);
+		HashNodeInsert(newNode, Hash<Key>::Value(p.First), m_Buckets.Data(), m_Buckets.Size() - 1);
 
-		++m_size;
+		++m_Size;
 
 		ReHash();
 
@@ -244,17 +244,17 @@ namespace Skore
 			return result;
 		}
 
-		Node* newNode = new(PlaceHolder(), m_allocator->MemAlloc(m_allocator->Alloc, sizeof(Node))) Node{key, Traits::Forward<Value>(value)};
+		Node* newNode = new(PlaceHolder(), m_Allocator->MemAlloc(m_Allocator->Alloc, sizeof(Node))) Node{key, Traits::Forward<Value>(value)};
 		newNode->Next = newNode->Prev = nullptr;
 
-		if (m_buckets.Empty())
+		if (m_Buckets.Empty())
 		{
-			m_buckets.Resize(9);
+			m_Buckets.Resize(9);
 		}
 
-		HashNodeInsert(newNode, Hash<Key>::Value(key), m_buckets.Data(), m_buckets.Size() - 1);
+		HashNodeInsert(newNode, Hash<Key>::Value(key), m_Buckets.Data(), m_Buckets.Size() - 1);
 
-		++m_size;
+		++m_Size;
 
 		ReHash();
 
@@ -266,19 +266,19 @@ namespace Skore
 	template<typename Key, typename Value>
 	SK_FINLINE void HashMap<Key, Value>::Erase(ConstIterator where)
 	{
-		HashNodeErase(where.Node, Hash<Key>::Value(where->First), m_buckets.Data(), m_buckets.Size() - 1);
+		HashNodeErase(where.Node, Hash<Key>::Value(where->First), m_Buckets.Data(), m_Buckets.Size() - 1);
 		where->~HashNode();
-		m_allocator->MemFree(m_allocator->Alloc, where.Node, sizeof(HashNode<Key, Value>));
-		--m_size;
+		m_Allocator->MemFree(m_Allocator->Alloc, where.Node, sizeof(HashNode<Key, Value>));
+		--m_Size;
 	}
 
 	template<typename Key, typename Value>
 	SK_FINLINE void HashMap<Key, Value>::Erase(Iterator where)
 	{
-		HashNodeErase(where.Node, Hash<Key>::Value(where->First), m_buckets.Data(), m_buckets.Size() - 1);
+		HashNodeErase(where.Node, Hash<Key>::Value(where->First), m_Buckets.Data(), m_Buckets.Size() - 1);
 		where->~HashNode();
-		m_allocator->MemFree(m_allocator->Alloc, where.Node, sizeof(HashNode<Key, Value>));
-		--m_size;
+		m_Allocator->MemFree(m_Allocator->Alloc, where.Node, sizeof(HashNode<Key, Value>));
+		--m_Size;
 	}
 
 	template<typename Key, typename Value>
@@ -295,19 +295,19 @@ namespace Skore
 	template<typename Key, typename Value>
 	SK_FINLINE void HashMap<Key, Value>::ReHash()
 	{
-		if (m_size + 1 > 4 * m_buckets.Size())
+		if (m_Size + 1 > 4 * m_Buckets.Size())
 		{
-			Node* root = *m_buckets.begin();
-			const usize newNumberBuckets = (m_buckets.Size() - 1) * 8;
+			Node* root = *m_Buckets.begin();
+			const usize newNumberBuckets = (m_Buckets.Size() - 1) * 8;
 
-			m_buckets.Clear();
-			m_buckets.Resize(newNumberBuckets + 1);
+			m_Buckets.Clear();
+			m_Buckets.Resize(newNumberBuckets + 1);
 
 			while (root)
 			{
 				Node*  next = root->Next;
 				root->Next = root->Prev = 0;
-				HashNodeInsert(root, Hash<Key>::Value(root->First), m_buckets.Data(), m_buckets.Size() - 1);
+				HashNodeInsert(root, Hash<Key>::Value(root->First), m_Buckets.Data(), m_Buckets.Size() - 1);
 				root = next;
 			}
 		}
@@ -317,10 +317,10 @@ namespace Skore
 	template<typename ParamKey>
 	bool HashMap<Key, Value>::Has(const ParamKey& key) const
 	{
-		if (m_buckets.Empty()) return false;
-		const usize bucket = Hash<Key>::Value(key) & (m_buckets.Size() - 2);
+		if (m_Buckets.Empty()) return false;
+		const usize bucket = Hash<Key>::Value(key) & (m_Buckets.Size() - 2);
 		typedef Node* NodePtr;
-		for (NodePtr it = m_buckets[bucket], end = m_buckets[bucket + 1]; it != end; it = it->Next)
+		for (NodePtr it = m_Buckets[bucket], end = m_Buckets[bucket + 1]; it != end; it = it->Next)
 		{
 			if (it->First == key)
 			{
