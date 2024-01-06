@@ -357,7 +357,7 @@ namespace Skore
 	{
 		DestroyData(resourceStorage->Data, true);
 		resourceStorage->~ResourceStorage();
-		memset(resourceStorage, 0, sizeof(ResourceStorage));
+		MemSet(resourceStorage, 0, sizeof(ResourceStorage));
 	}
 
 	RID Repository::CloneResource(RID rid)

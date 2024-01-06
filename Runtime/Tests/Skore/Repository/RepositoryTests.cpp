@@ -150,6 +150,7 @@ namespace Skore::Tests
 			Repository::GarbageCollect();
 			CHECK(nr > GetAllocationNum());
 
+			CHECK(Repository::IsAlive(rid) == true);
 			Repository::DestroyResource(rid);
 			Repository::GarbageCollect();
 			CHECK(Repository::IsAlive(rid) == false);

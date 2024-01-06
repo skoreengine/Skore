@@ -100,5 +100,12 @@ namespace Skore
 		return res;
 	}
 
+	inline void MemSet(CPtr desc, char value, usize size)
+	{
+		for (usize i = 0; i < size; ++i)
+		{
+			*((char*) desc + i) = value;
+		}
+	}
 }
 
