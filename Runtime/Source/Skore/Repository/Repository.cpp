@@ -212,16 +212,25 @@ namespace Skore
 				{
 					if (data->Fields[i] != nullptr)
 					{
-						if (destroySubObjects)
-						{
-							if (data->Storage->ResourceType->FieldsByIndex[i]->FieldType == ResourceFieldType_SubObject)
-							{
-								RID suboject = *static_cast<RID*>(data->Fields[i]);
-								DestroyResource(&repository.Pages[suboject.Page]->Elements[suboject.Offset]);
-							}
-						}
 
-						if (data->Storage->ResourceType->FieldsByIndex[i]->TypeHandler)
+						if (data->Storage->ResourceType->FieldsByIndex[i]->FieldType == ResourceFieldType_SubObjectSet)
+						{
+							HashSet<RID>& subOjects = *static_cast<HashSet<RID>*>(data->Fields[i]);
+							if (destroySubObjects)
+							{
+								for (auto it: subOjects)
+								{
+									DestroyResource(&repository.Pages[it.First.Page]->Elements[it.First.Offset]);
+								}
+							}
+							subOjects.~HashSet<RID>();
+						}
+						else if (destroySubObjects && data->Storage->ResourceType->FieldsByIndex[i]->FieldType == ResourceFieldType_SubObject)
+						{
+							RID suboject = *static_cast<RID*>(data->Fields[i]);
+							DestroyResource(&repository.Pages[suboject.Page]->Elements[suboject.Offset]);
+						}
+						else if (data->Storage->ResourceType->FieldsByIndex[i]->TypeHandler)
 						{
 							data->Storage->ResourceType->FieldsByIndex[i]->TypeHandler->Destructor(data->Fields[i]);
 						}
@@ -422,7 +431,7 @@ namespace Skore
 		field->TypeHandler->Copy(ptr, m_WriteData->Fields[index]);
 	}
 
-	void ResourceObject::SetSubobject(u32 index, RID subobject)
+	void ResourceObject::SetSubObject(u32 index, RID subobject)
 	{
 		ResourceField* field = m_WriteData->Storage->ResourceType->FieldsByIndex[index];
 		SK_ASSERT(field->FieldType == ResourceFieldType_SubObject, "Field is not ResourceFieldType_SubObject");
@@ -434,26 +443,76 @@ namespace Skore
 		new(PlaceHolder(), m_WriteData->Fields[index]) RID{subobject};
 	}
 
-	void ResourceObject::SetSubobject(const StringView& name, RID subobject)
+	void ResourceObject::SetSubObject(const StringView& name, RID subobject)
 	{
 		if (auto it = m_WriteData->Storage->ResourceType->FieldsByName.Find(name))
 		{
-			SetSubobject(it->Second->Index, subobject);
+			SetSubObject(it->Second->Index, subobject);
 		}
 	}
 
-	RID ResourceObject::GetSubobject(u32 index)
+	RID ResourceObject::GetSubObject(u32 index)
 	{
 		return *static_cast<const RID*>(ResourceObjectGetValue(m_ReadData, index));
 	}
 
-	RID ResourceObject::GetSubobject(const StringView& name)
+	RID ResourceObject::GetSubObject(const StringView& name)
 	{
 		if (auto it = m_WriteData->Storage->ResourceType->FieldsByName.Find(name))
 		{
-			return GetSubobject(it->Second->Index);
+			return GetSubObject(it->Second->Index);
 		}
 		return {};
+	}
+
+	void ResourceObject::AddToSubObjectSet(u32 index, RID subObject)
+	{
+		AddToSubObjectSet(index, {&subObject, 1});
+	}
+
+	void ResourceObject::AddToSubObjectSet(const StringView& name, RID subObject)
+	{
+		if (auto it = m_WriteData->Storage->ResourceType->FieldsByName.Find(name))
+		{
+			AddToSubObjectSet(it->Second->Index, subObject);
+		}
+	}
+
+	void ResourceObject::AddToSubObjectSet(u32 index, const Span<RID>& subObjects)
+	{
+		ResourceField* field = m_WriteData->Storage->ResourceType->FieldsByIndex[index];
+		SK_ASSERT(field->FieldType == ResourceFieldType_SubObjectSet, "Field is not ResourceFieldType_SubObjectSet");
+
+		if (m_WriteData->Fields[index] == nullptr)
+		{
+			m_WriteData->Fields[index] = static_cast<char*>(m_WriteData->Memory) + field->Offset;
+			new(PlaceHolder(), m_WriteData->Fields[index]) HashSet<RID>();
+		}
+
+		HashSet<RID>& set = *static_cast<HashSet<RID>*>(m_WriteData->Fields[index]);
+
+		for(const RID& rid: subObjects)
+		{
+			set.Insert(rid);
+		}
+	}
+
+	void ResourceObject::AddToSubObjectSet(const StringView& name, const Span<RID>& subObjects)
+	{
+		if (auto it = m_WriteData->Storage->ResourceType->FieldsByName.Find(name))
+		{
+			AddToSubObjectSet(it->Second->Index, subObjects);
+		}
+	}
+
+	void ResourceObject::GetSubObjectSet(u32 index, Array<RID>& subObjects)
+	{
+		const HashSet<RID>& set = *static_cast<const HashSet<RID>*>(ResourceObjectGetValue(m_ReadData, index));
+		subObjects.Reserve(set.Size());
+		for (auto it: set)
+		{
+			subObjects.EmplaceBack(it.First);
+		}
 	}
 
 	void ResourceObject::Commit()

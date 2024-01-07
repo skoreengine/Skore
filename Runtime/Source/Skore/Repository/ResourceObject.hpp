@@ -4,6 +4,7 @@
 #pragma once
 
 #include "RepositoryTypes.hpp"
+#include "Skore/Core/Array.hpp"
 #include "Skore/Core/TypeInfo.hpp"
 
 namespace Skore
@@ -62,11 +63,19 @@ namespace Skore
 			SetValuePtr(index, &value, typeId);
 		}
 
-		void SetSubobject(u32 index, RID subobject);
-		void SetSubobject(const StringView& name, RID subobject);
+		void SetSubObject(u32 index, RID subobject);
+		void SetSubObject(const StringView& name, RID subobject);
 
-		RID GetSubobject(u32 index);
-		RID GetSubobject(const StringView& name);
+		RID GetSubObject(u32 index);
+		RID GetSubObject(const StringView& name);
+
+		void AddToSubObjectSet(u32 index, RID subObject);
+		void AddToSubObjectSet(const StringView& name, RID subObject);
+
+		void AddToSubObjectSet(u32 index, const Span<RID>& subObjects);
+		void AddToSubObjectSet(const StringView& name, const Span<RID>& subObjects);
+
+		void GetSubObjectSet(u32 index, Array<RID>& subObjects);
 
 
 		explicit operator bool() const

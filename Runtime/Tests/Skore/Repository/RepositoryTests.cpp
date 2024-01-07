@@ -14,12 +14,13 @@ namespace Skore::Tests
 
 	enum TestResource_
 	{
-		TestResource_BoolValue   = 0,
-		TestResource_IntValue    = 1,
-		TestResource_FloatValue  = 2,
-		TestResource_StringValue = 3,
-		TestResource_LongValue   = 4,
-		TestResource_Subobject   = 5
+		TestResource_BoolValue    = 0,
+		TestResource_IntValue     = 1,
+		TestResource_FloatValue   = 2,
+		TestResource_StringValue  = 3,
+		TestResource_LongValue    = 4,
+		TestResource_SubObject    = 5,
+		TestResource_SubObjectSet = 6
 	};
 
 	enum TestOtherResource_
@@ -65,9 +66,14 @@ namespace Skore::Tests
 					.FieldTypeId = GetTypeID<i64>()
 				},
 				ResourceFieldCreation{
-					.Index = TestResource_Subobject,
+					.Index = TestResource_SubObject,
 					.Name = "SubObject",
 					.Type = ResourceFieldType_SubObject
+				},
+				ResourceFieldCreation{
+					.Index = TestResource_SubObjectSet,
+					.Name = "SubObjectSet",
+					.Type = ResourceFieldType_SubObjectSet
 				}
 			};
 
@@ -246,40 +252,80 @@ namespace Skore::Tests
 		Reflection::Shutdown();
 	}
 
-	TEST_CASE("Repository::TestSubobjects")
+	TEST_CASE("Repository::TestSubObjects")
 	{
 		Reflection::Init();
 		Repository::Init();
 
 		CreateResourceTypes();
-
-		RID rid = Repository::CreateResource(TestResource);
-
-		RID subobject = Repository::CreateResource(TestOtherResource);
 		{
-			ResourceObject write = Repository::Write(subobject);
-			write.SetValue(TestOtherResource_TestValue, 10);
-			write.Commit();
+			RID rid = Repository::CreateResource(TestResource);
+
+			RID subobject = Repository::CreateResource(TestOtherResource);
+			{
+				ResourceObject write = Repository::Write(subobject);
+				write.SetValue(TestOtherResource_TestValue, 10);
+				write.Commit();
+			}
+
+			{
+				ResourceObject write = Repository::Write(rid);
+				write.SetSubObject(TestResource_SubObject, subobject);
+				write.Commit();
+			}
+
+			{
+				ResourceObject read = Repository::Read(rid);
+				CHECK(read.GetSubObject(TestResource_SubObject) == subobject);
+			}
+
+			Repository::DestroyResource(rid);
+			Repository::GarbageCollect();
+			CHECK(Repository::IsAlive(rid) == false);
+			CHECK(Repository::IsAlive(subobject) == false);
 		}
 
 		{
-			ResourceObject write = Repository::Write(rid);
-			write.SetSubobject(TestResource_Subobject, subobject);
-			write.Commit();
+			RID rid = Repository::CreateResource(TestResource);
+
+			{
+				ResourceObject write = Repository::Write(rid);
+				for (int i = 0; i < 10; ++i)
+				{
+					RID subObject = Repository::CreateResource(TestOtherResource);
+
+					ResourceObject writeSub = Repository::Write(subObject);
+					writeSub.SetValue(TestOtherResource_TestValue, (i32) subObject.Id);
+					writeSub.Commit();
+
+					write.AddToSubObjectSet(TestResource_SubObjectSet, subObject);
+				}
+				write.Commit();
+			}
+
+			{
+				Array<RID> subObjects{};
+				ResourceObject read = Repository::Read(rid);
+				read.GetSubObjectSet(TestResource_SubObjectSet, subObjects);
+
+				CHECK(subObjects.Size() == 10);
+
+				for(const RID& subObject: subObjects)
+				{
+					ResourceObject readSub = Repository::Write(subObject);
+					CHECK(readSub.GetValue<i32>(TestOtherResource_TestValue) == subObject.Id);
+				}
+			}
 		}
 
-		{
-			ResourceObject read = Repository::Read(rid);
-			CHECK(read.GetSubobject(TestResource_Subobject) == subobject);
-		}
-
-		Repository::DestroyResource(rid);
-		Repository::GarbageCollect();
-		CHECK(Repository::IsAlive(rid) == false);
-		CHECK(Repository::IsAlive(subobject) == false);
 
 		Repository::Shutdown();
 		Reflection::Shutdown();
+	}
+
+	TEST_CASE("Repository::TestSubObjectsSet")
+	{
+
 	}
 
 	TEST_CASE("Repository::TestMultithreading")
