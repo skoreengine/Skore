@@ -414,13 +414,13 @@ namespace Skore::Tests
 				});
 			}
 
-			CHECK(check);
-
 			for (int i = 0; i < threads; ++i)
 			{
 				readThreads[i].join();
 				writeThreads[i].join();
 			}
+
+			CHECK(check);
 		}
 
 		Repository::Shutdown();
