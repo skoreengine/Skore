@@ -72,10 +72,22 @@ namespace Skore
 		void AddToSubObjectSet(u32 index, RID subObject);
 		void AddToSubObjectSet(const StringView& name, RID subObject);
 
+		void RemoveFromSubObjectSet(u32 index, RID subObject);
+		void RemoveFromSubObjectSet(u32 index, const Span<RID>& subObjects);
+
 		void AddToSubObjectSet(u32 index, const Span<RID>& subObjects);
 		void AddToSubObjectSet(const StringView& name, const Span<RID>& subObjects);
 
-		void GetSubObjectSet(u32 index, Array<RID>& subObjects);
+		void ClearSubObjectSet(u32 index);
+
+		usize GetSubObjectSetCount(u32 index);
+		void GetSubObjectSet(u32 index, Span<RID> subObjects);
+
+		void RemoveFromPrototypeSubObjectSet(u32 index, const Span<RID>& remove);
+		void RemoveFromPrototypeSubObjectSet(u32 index, RID remove);
+
+		void CancelRemoveFromPrototypeSubObjectSet(u32 index, const Span<RID>& remove);
+		void CancelRemoveFromPrototypeSubObjectSet(u32 index, RID remove);
 
 
 		explicit operator bool() const

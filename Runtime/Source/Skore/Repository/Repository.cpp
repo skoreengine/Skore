@@ -1,6 +1,12 @@
 // Copyright 2023 Paulo Marangoni.
 // Use of this source code is governed by the license that can be found in the LICENSE file at the root of this distribution.
 
+//thank you 'the machinery'
+
+//Repository is based on
+//https://ruby0x1.github.io/machinery_blog_archive/post/the-story-behind-the-truth-designing-a-data-model/index.html
+//https://ruby0x1.github.io/machinery_blog_archive/post/multi-threading-the-truth/index.html
+
 #include <atomic>
 #include <mutex>
 #include <queue>
@@ -63,6 +69,7 @@ namespace Skore
 	struct ResourceStorage
 	{
 		RID                          Rid;
+		UUID                         Uuid;
 		ResourceTypePtr              ResourceType{};
 		std::atomic<ResourceDataPtr> Data;
 		ResourceStoragePtr           Prototype{};
@@ -82,16 +89,26 @@ namespace Skore
 		bool            DestroyResource{};
 	};
 
+	struct SubObjectSetData
+	{
+		HashSet<RID> SubObjects{};
+		HashSet<RID> PrototypeRemoved{};
+	};
+
+	typedef SubObjectSetData* SubObjectSetDataPtr;
+
 	struct RepositoryContext
 	{
 		AllocatorPtr Allocator;
-
 		HashMap<TypeID, SharedPtr<ResourceType>> ResourceTypes{};
 
 		std::atomic_size_t Counter{};
 		usize              PageCount{};
 		ResourcePagePtr    Pages[SK_REPO_PAGE_SIZE]{};
 		std::mutex         PageMutex{};
+
+		std::mutex         ByUUIDMutex{};
+		HashMap<UUID, RID> ByUUID{};
 
 		moodycamel::ConcurrentQueue<DestroyResourceData> ToCollectItems = moodycamel::ConcurrentQueue<DestroyResourceData>(100);
 	};
@@ -170,7 +187,7 @@ namespace Skore
 			else if (resourceFieldCreation.Type == ResourceFieldType_SubObjectSet)
 			{
 				it->Second->Offset = resourceType->Size;
-				resourceType->Size += sizeof(HashSet<RID>);
+				resourceType->Size += sizeof(SubObjectSetData);
 			}
 		}
 
@@ -212,18 +229,17 @@ namespace Skore
 				{
 					if (data->Fields[i] != nullptr)
 					{
-
 						if (data->Storage->ResourceType->FieldsByIndex[i]->FieldType == ResourceFieldType_SubObjectSet)
 						{
-							HashSet<RID>& subOjects = *static_cast<HashSet<RID>*>(data->Fields[i]);
+							SubObjectSetData& subObjectSetData = *static_cast<SubObjectSetData*>(data->Fields[i]);
 							if (destroySubObjects)
 							{
-								for (auto it: subOjects)
+								for (auto it: subObjectSetData.SubObjects)
 								{
 									DestroyResource(&repository.Pages[it.First.Page]->Elements[it.First.Offset]);
 								}
 							}
-							subOjects.~HashSet<RID>();
+							subObjectSetData.~SubObjectSetData();
 						}
 						else if (destroySubObjects && data->Storage->ResourceType->FieldsByIndex[i]->FieldType == ResourceFieldType_SubObject)
 						{
@@ -288,6 +304,32 @@ namespace Skore
 		return rid;
 	}
 
+	void Repository::SetUUID(const RID& rid, const UUID& uuid)
+	{
+		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
+		storage->Uuid = uuid;
+		{
+			std::unique_lock<std::mutex> lock(repository.ByUUIDMutex);
+			repository.ByUUID.Insert(uuid, rid);
+		}
+	}
+
+	UUID Repository::GetUUID(const RID& rid)
+	{
+		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
+		return storage->Uuid;
+	}
+
+	RID Repository::GetByUUID(const UUID& uuid)
+	{
+		std::unique_lock<std::mutex> lock(repository.ByUUIDMutex);
+		if (auto it = repository.ByUUID.Find(uuid))
+		{
+			return it->Second;
+		}
+		return {};
+	}
+
 	ResourceObject Repository::Read(RID rid)
 	{
 		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
@@ -308,7 +350,18 @@ namespace Skore
 				if (storageData->Fields[i] != nullptr)
 				{
 					data->Fields[i] = static_cast<char*>(memory) + storage->ResourceType->FieldsByIndex[i]->Offset;
-					storage->ResourceType->FieldsByIndex[i]->TypeHandler->Copy(storageData->Fields[i], data->Fields[i]);
+					if (storage->ResourceType->FieldsByIndex[i]->TypeHandler)
+					{
+						storage->ResourceType->FieldsByIndex[i]->TypeHandler->Copy(storageData->Fields[i], data->Fields[i]);
+					}
+					else if (data->Storage->ResourceType->FieldsByIndex[i]->FieldType == ResourceFieldType_SubObjectSet)
+					{
+						new(PlaceHolder(), data->Fields[i]) SubObjectSetData{*static_cast<SubObjectSetData*>(storageData->Fields[i])};
+					}
+					else if (data->Storage->ResourceType->FieldsByIndex[i]->FieldType == ResourceFieldType_SubObject)
+					{
+						new(PlaceHolder(), data->Fields[i]) RID{*static_cast<RID*>(storageData->Fields[i])};
+					}
 				}
 			}
 		}
@@ -478,6 +531,26 @@ namespace Skore
 		}
 	}
 
+	void ResourceObject::RemoveFromSubObjectSet(u32 index, const Span<RID>& subObjects)
+	{
+		ResourceField* field = m_WriteData->Storage->ResourceType->FieldsByIndex[index];
+		SK_ASSERT(field->FieldType == ResourceFieldType_SubObjectSet, "Field is not ResourceFieldType_SubObjectSet");
+		if (m_WriteData->Fields[index] != nullptr)
+		{
+			SubObjectSetData& subObjectSetData = *static_cast<SubObjectSetData*>(m_WriteData->Fields[index]);
+
+			for(const RID& rid: subObjects)
+			{
+				subObjectSetData.SubObjects.Erase(rid);
+			}
+		}
+	}
+
+	void ResourceObject::RemoveFromSubObjectSet(u32 index, RID subObject)
+	{
+		RemoveFromSubObjectSet(index, {&subObject, 1});
+	}
+
 	void ResourceObject::AddToSubObjectSet(u32 index, const Span<RID>& subObjects)
 	{
 		ResourceField* field = m_WriteData->Storage->ResourceType->FieldsByIndex[index];
@@ -486,14 +559,14 @@ namespace Skore
 		if (m_WriteData->Fields[index] == nullptr)
 		{
 			m_WriteData->Fields[index] = static_cast<char*>(m_WriteData->Memory) + field->Offset;
-			new(PlaceHolder(), m_WriteData->Fields[index]) HashSet<RID>();
+			new(PlaceHolder(), m_WriteData->Fields[index]) SubObjectSetData();
 		}
 
-		HashSet<RID>& set = *static_cast<HashSet<RID>*>(m_WriteData->Fields[index]);
+		SubObjectSetData& subObjectSetData = *static_cast<SubObjectSetData*>(m_WriteData->Fields[index]);
 
 		for(const RID& rid: subObjects)
 		{
-			set.Insert(rid);
+			subObjectSetData.SubObjects.Insert(rid);
 		}
 	}
 
@@ -505,14 +578,121 @@ namespace Skore
 		}
 	}
 
-	void ResourceObject::GetSubObjectSet(u32 index, Array<RID>& subObjects)
+	void ResourceObject::ClearSubObjectSet(u32 index)
 	{
-		const HashSet<RID>& set = *static_cast<const HashSet<RID>*>(ResourceObjectGetValue(m_ReadData, index));
-		subObjects.Reserve(set.Size());
-		for (auto it: set)
+		ResourceField* field = m_WriteData->Storage->ResourceType->FieldsByIndex[index];
+		SK_ASSERT(field->FieldType == ResourceFieldType_SubObjectSet, "Field is not ResourceFieldType_SubObjectSet");
+		if (m_WriteData->Fields[index] != nullptr)
 		{
-			subObjects.EmplaceBack(it.First);
+			SubObjectSetData& subObjectSetData = *static_cast<SubObjectSetData*>(m_WriteData->Fields[index]);
+			subObjectSetData.SubObjects.Clear();
+			if (subObjectSetData.PrototypeRemoved.Empty())
+			{
+				subObjectSetData.~SubObjectSetData();
+				m_WriteData->Fields[index] = nullptr;
+			}
 		}
+	}
+
+	bool ResourceSubObjectAllowed(u32 index, ResourceData* data, ResourceData* ownerData, const RID& rid)
+	{
+		if (ownerData)
+		{
+			SubObjectSetDataPtr subObjectSetData = static_cast<SubObjectSetDataPtr>(ownerData->Fields[index]);
+			if (subObjectSetData && subObjectSetData->PrototypeRemoved.Has(rid))
+			{
+				return false;
+			}
+		}
+
+		if (data->Storage->Prototype)
+		{
+			return ResourceSubObjectAllowed(index, data->Storage->Prototype->Data, data, rid);
+		}
+
+		return true;
+	}
+
+	void ResourceGetSubObjectSet(ResourceData* data, ResourceData* ownerData, u32 index, usize& count, Span<RID>* subObjects)
+	{
+		SubObjectSetDataPtr subObjectSetData = static_cast<SubObjectSetDataPtr>(data->Fields[index]);
+
+		if (data->Storage->Prototype)
+		{
+			ResourceGetSubObjectSet(data->Storage->Prototype->Data, data, index, count, subObjects);
+		}
+
+		if (subObjectSetData)
+		{
+			for (auto it: subObjectSetData->SubObjects)
+			{
+				if (ResourceSubObjectAllowed(index, data, ownerData, it.First))
+				{
+					if (subObjects)
+					{
+						(*subObjects)[count] = it.First;
+					}
+					count++;
+				}
+			}
+		}
+	}
+
+	usize ResourceObject::GetSubObjectSetCount(u32 index)
+	{
+		usize count{};
+		ResourceGetSubObjectSet(m_ReadData, nullptr, index, count, nullptr);
+		return count;
+	}
+
+	void ResourceObject::GetSubObjectSet(u32 index, Span<RID> subObjects)
+	{
+		usize count{};
+		ResourceGetSubObjectSet(m_ReadData, nullptr, index, count, &subObjects);
+	}
+
+	void ResourceObject::RemoveFromPrototypeSubObjectSet(u32 index, const Span<RID>& remove)
+	{
+		ResourceField* field = m_WriteData->Storage->ResourceType->FieldsByIndex[index];
+		SK_ASSERT(field->FieldType == ResourceFieldType_SubObjectSet, "Field is not ResourceFieldType_SubObjectSet");
+		if (m_WriteData->Fields[index] == nullptr)
+		{
+			m_WriteData->Fields[index] = static_cast<char*>(m_WriteData->Memory) + field->Offset;
+			new(PlaceHolder(), m_WriteData->Fields[index]) SubObjectSetData();
+		}
+
+		SubObjectSetData& subObjectSetData = *static_cast<SubObjectSetData*>(m_WriteData->Fields[index]);
+		for(const RID& rid: remove)
+		{
+			subObjectSetData.PrototypeRemoved.Insert(rid);
+		}
+	}
+
+	void ResourceObject::RemoveFromPrototypeSubObjectSet(u32 index, RID remove)
+	{
+		RemoveFromPrototypeSubObjectSet(index, {&remove, 1});
+	}
+
+	void ResourceObject::CancelRemoveFromPrototypeSubObjectSet(u32 index, const Span<RID>& remove)
+	{
+		ResourceField* field = m_WriteData->Storage->ResourceType->FieldsByIndex[index];
+		SK_ASSERT(field->FieldType == ResourceFieldType_SubObjectSet, "Field is not ResourceFieldType_SubObjectSet");
+		if (m_WriteData->Fields[index] == nullptr)
+		{
+			m_WriteData->Fields[index] = static_cast<char*>(m_WriteData->Memory) + field->Offset;
+			new(PlaceHolder(), m_WriteData->Fields[index]) SubObjectSetData();
+		}
+
+		SubObjectSetData& subObjectSetData = *static_cast<SubObjectSetData*>(m_WriteData->Fields[index]);
+		for(const RID& rid: remove)
+		{
+			subObjectSetData.PrototypeRemoved.Erase(rid);
+		}
+	}
+
+	void ResourceObject::CancelRemoveFromPrototypeSubObjectSet(u32 index, RID remove)
+	{
+		CancelRemoveFromPrototypeSubObjectSet(index, {&remove, 1});
 	}
 
 	void ResourceObject::Commit()

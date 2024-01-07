@@ -4,8 +4,10 @@
 #pragma once
 
 #include "Skore/Defines.hpp"
+#include "Skore/Core/UUID.hpp"
 #include "RepositoryTypes.hpp"
 #include "ResourceObject.hpp"
+
 
 
 namespace Skore::Repository
@@ -20,6 +22,9 @@ namespace Skore::Repository
 
 	SK_API RID              CreateResource(TypeID typeId);
 	SK_API RID              CreateFromPrototype(RID prototype);
+	SK_API void             SetUUID(const RID& rid, const UUID& uuid);
+	SK_API UUID             GetUUID(const RID& rid);
+	SK_API RID              GetByUUID(const UUID& uuid);
 	SK_API void             ClearValues(RID rid);
 	SK_API void             DestroyResource(RID rid);
 	SK_API RID              CloneResource(RID rid);
