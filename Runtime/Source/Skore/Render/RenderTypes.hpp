@@ -98,7 +98,6 @@ namespace Skore
 	struct GraphicsPipelineCreation
 	{
 		RenderPass        RenderPass{};
-		RenderSwapchain   Swapchain{};
 		String            Shader{};
 		bool              DepthWrite        = false;
 		bool              StencilTest       = false;

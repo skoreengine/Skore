@@ -42,10 +42,17 @@ namespace Skore::GL
 #ifdef SK_DESKTOP
 		if (!gl.GladLoaded && !gladLoadGLLoader((GLADloadproc) Platform::GetProcAddress()))
 		{
-			gl.Logger.Error("[GL] Failed to initialize GLAD");
+			gl.Logger.Error("Failed to initialize GLAD");
 		}
 		gl.GladLoaded = true;
 #endif
+
+		const char* gpuRenderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+		if (gpuRenderer)
+		{			
+			gl.Logger.Info("GPU Renderer: {}", gpuRenderer);	
+		}
+
 		Platform::SetVSync(vsync);
 		return {new GLSwapchain{window, GLRenderPass{0, window}}};
 	}

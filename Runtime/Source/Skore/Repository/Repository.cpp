@@ -113,7 +113,7 @@ namespace Skore
 		moodycamel::ConcurrentQueue<DestroyResourceData> ToCollectItems = moodycamel::ConcurrentQueue<DestroyResourceData>(100);
 	};
 
-	RepositoryContext repository{};
+	RepositoryContext* repository{};
 
 	void Repository::Init()
 	{
@@ -122,7 +122,8 @@ namespace Skore
 
 	void Repository::Init(Allocator* allocator)
 	{
-		repository.Allocator = allocator;
+		repository = Alloc<RepositoryContext>();
+		repository->Allocator = allocator;
 		CreateResource({});
 	}
 
@@ -130,25 +131,23 @@ namespace Skore
 	{
 		GarbageCollect();
 
-		for (u64 i = 0; i < repository.Counter; ++i)
+		for (u64 i = 0; i < repository->Counter; ++i)
 		{
-			ResourceStorage* storage = &repository.Pages[PAGE(i)]->Elements[OFFSET(i)];
+			ResourceStorage* storage = &repository->Pages[PAGE(i)]->Elements[OFFSET(i)];
 			DestroyData(storage->Data, false);
 			storage->~ResourceStorage();
 		}
 
-		for (u64 i = 0; i < repository.PageCount; ++i)
+		for (u64 i = 0; i < repository->PageCount; ++i)
 		{
-			if (!repository.Pages[i])
+			if (!repository->Pages[i])
 			{
 				break;
 			}
-			repository.Allocator->MemFree(repository.Allocator->Alloc, repository.Pages[i], sizeof(ResourcePage));
-			repository.Pages[i] = nullptr;
+			repository->Allocator->MemFree(repository->Allocator->Alloc, repository->Pages[i], sizeof(ResourcePage));
+			repository->Pages[i] = nullptr;
 		}
-		repository.PageCount = 0;
-		repository.Counter   = 0;
-		repository.ResourceTypes.Clear();
+		Destroy(repository);
 	}
 
 	void Repository::CreateResourceType(const ResourceTypeCreation& resourceTypeCreation)
@@ -191,7 +190,7 @@ namespace Skore
 			}
 		}
 
-		repository.ResourceTypes.Emplace(resourceTypeCreation.TypeId, Traits::Move(resourceType));
+		repository->ResourceTypes.Emplace(resourceTypeCreation.TypeId, Traits::Move(resourceType));
 	}
 
 	void Repository::CreateResourceType(TypeID typeId)
@@ -201,22 +200,22 @@ namespace Skore
 
 	SK_FINLINE RID Repository::NewId()
 	{
-		u64 index = repository.Counter++;
+		u64 index = repository->Counter++;
 		return RID{OFFSET(index), PAGE(index)};
 	}
 
 	ResourceStorage* Repository::GetOrAllocate(RID rid)
 	{
-		if (repository.Pages[rid.Page] == nullptr)
+		if (repository->Pages[rid.Page] == nullptr)
 		{
-			std::unique_lock<std::mutex> lock(repository.PageMutex);
-			if (repository.Pages[rid.Page] == nullptr)
+			std::unique_lock<std::mutex> lock(repository->PageMutex);
+			if (repository->Pages[rid.Page] == nullptr)
 			{
-				repository.Pages[rid.Page] = static_cast<ResourcePage*>(repository.Allocator->MemAlloc(repository.Allocator->Alloc, sizeof(ResourcePage)));
-				repository.PageCount++;
+				repository->Pages[rid.Page] = static_cast<ResourcePage*>(repository->Allocator->MemAlloc(repository->Allocator->Alloc, sizeof(ResourcePage)));
+				repository->PageCount++;
 			}
 		}
-		return &repository.Pages[rid.Page]->Elements[rid.Offset];
+		return &repository->Pages[rid.Page]->Elements[rid.Offset];
 	}
 
 	void Repository::DestroyData(ResourceData* data, bool destroySubObjects)
@@ -236,7 +235,7 @@ namespace Skore
 							{
 								for (auto it: subObjectSetData.SubObjects)
 								{
-									DestroyResource(&repository.Pages[it.First.Page]->Elements[it.First.Offset]);
+									DestroyResource(&repository->Pages[it.First.Page]->Elements[it.First.Offset]);
 								}
 							}
 							subObjectSetData.~SubObjectSetData();
@@ -244,7 +243,7 @@ namespace Skore
 						else if (destroySubObjects && data->Storage->ResourceType->FieldsByIndex[i]->FieldType == ResourceFieldType_SubObject)
 						{
 							RID suboject = *static_cast<RID*>(data->Fields[i]);
-							DestroyResource(&repository.Pages[suboject.Page]->Elements[suboject.Offset]);
+							DestroyResource(&repository->Pages[suboject.Page]->Elements[suboject.Offset]);
 						}
 						else if (data->Storage->ResourceType->FieldsByIndex[i]->TypeHandler)
 						{
@@ -255,10 +254,10 @@ namespace Skore
 					}
 
 				}
-				repository.Allocator->MemFree(repository.Allocator->Alloc, data->Memory, data->Storage->ResourceType->Size);
+				repository->Allocator->MemFree(repository->Allocator->Alloc, data->Memory, data->Storage->ResourceType->Size);
 				data->Memory = nullptr;
 			}
-			Destroy(repository.Allocator, data);
+			Destroy(repository->Allocator, data);
 		}
 	}
 
@@ -268,7 +267,7 @@ namespace Skore
 		ResourceStorage* resourceStorage = GetOrAllocate(rid);
 		ResourceType   * resourceType    = nullptr;
 
-		if (auto it = repository.ResourceTypes.Find(typeId))
+		if (auto it = repository->ResourceTypes.Find(typeId))
 		{
 			resourceType = it->Second.Get();
 		}
@@ -286,7 +285,7 @@ namespace Skore
 	{
 		RID rid = NewId();
 		ResourceStorage* resourceStorage  = GetOrAllocate(rid);
-		ResourceStorage* prototypeStorage = &repository.Pages[prototype.Page]->Elements[prototype.Offset];
+		ResourceStorage* prototypeStorage = &repository->Pages[prototype.Page]->Elements[prototype.Offset];
 		SK_ASSERT(prototypeStorage->ResourceType, "Prototype can't be created from resources without types");
 		SK_ASSERT(prototypeStorage->Data, "Prototype can't be created from null resources");
 
@@ -306,24 +305,24 @@ namespace Skore
 
 	void Repository::SetUUID(const RID& rid, const UUID& uuid)
 	{
-		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
+		ResourceStorage* storage = &repository->Pages[rid.Page]->Elements[rid.Offset];
 		storage->Uuid = uuid;
 		{
-			std::unique_lock<std::mutex> lock(repository.ByUUIDMutex);
-			repository.ByUUID.Insert(uuid, rid);
+			std::unique_lock<std::mutex> lock(repository->ByUUIDMutex);
+			repository->ByUUID.Insert(uuid, rid);
 		}
 	}
 
 	UUID Repository::GetUUID(const RID& rid)
 	{
-		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
+		ResourceStorage* storage = &repository->Pages[rid.Page]->Elements[rid.Offset];
 		return storage->Uuid;
 	}
 
 	RID Repository::GetByUUID(const UUID& uuid)
 	{
-		std::unique_lock<std::mutex> lock(repository.ByUUIDMutex);
-		if (auto it = repository.ByUUID.Find(uuid))
+		std::unique_lock<std::mutex> lock(repository->ByUUIDMutex);
+		if (auto it = repository->ByUUID.Find(uuid))
 		{
 			return it->Second;
 		}
@@ -332,15 +331,15 @@ namespace Skore
 
 	ResourceObject Repository::Read(RID rid)
 	{
-		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
+		ResourceStorage* storage = &repository->Pages[rid.Page]->Elements[rid.Offset];
 		return ResourceObject{storage->Data, nullptr};
 	}
 
 	ResourceObject Repository::Write(RID rid)
 	{
-		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
-		CPtr memory = repository.Allocator->MemAlloc(repository.Allocator->Alloc, storage->ResourceType->Size);
-		ResourceData* data = Alloc<ResourceData>(repository.Allocator, storage, memory, Array<CPtr>(storage->ResourceType->FieldsByIndex.Size()));
+		ResourceStorage* storage = &repository->Pages[rid.Page]->Elements[rid.Offset];
+		CPtr memory = repository->Allocator->MemAlloc(repository->Allocator->Alloc, storage->ResourceType->Size);
+		ResourceData* data = Alloc<ResourceData>(repository->Allocator, storage, memory, Array<CPtr>(storage->ResourceType->FieldsByIndex.Size()));
 
 		if (storage->Data)
 		{
@@ -371,7 +370,7 @@ namespace Skore
 	void Repository::GarbageCollect()
 	{
 		DestroyResourceData data;
-		while (repository.ToCollectItems.try_dequeue(data))
+		while (repository->ToCollectItems.try_dequeue(data))
 		{
 			if (data.DestroyResource)
 			{
@@ -386,7 +385,7 @@ namespace Skore
 
 	void Repository::ClearValues(RID rid)
 	{
-		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
+		ResourceStorage* storage = &repository->Pages[rid.Page]->Elements[rid.Offset];
 		if (storage->Data)
 		{
 			ResourceData* data = storage->Data.load();
@@ -400,7 +399,7 @@ namespace Skore
 						data->Fields[i] = nullptr;
 					}
 				}
-				repository.Allocator->MemFree(repository.Allocator->Alloc, data->Memory, data->Storage->ResourceType->Size);
+				repository->Allocator->MemFree(repository->Allocator->Alloc, data->Memory, data->Storage->ResourceType->Size);
 				data->Memory = nullptr;
 			}
 		}
@@ -408,8 +407,8 @@ namespace Skore
 
 	void Repository::DestroyResource(RID rid)
 	{
-		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
-		repository.ToCollectItems.enqueue(DestroyResourceData{
+		ResourceStorage* storage = &repository->Pages[rid.Page]->Elements[rid.Offset];
+		repository->ToCollectItems.enqueue(DestroyResourceData{
 			.Data = storage->Data,
 			.DestroySubObjects = true,
 			.DestroyResource = true
@@ -430,7 +429,7 @@ namespace Skore
 
 	bool Repository::IsAlive(RID rid)
 	{
-		ResourceStorage* storage = &repository.Pages[rid.Page]->Elements[rid.Offset];
+		ResourceStorage* storage = &repository->Pages[rid.Page]->Elements[rid.Offset];
 		return storage->Rid.Id != 0;
 	}
 
@@ -701,7 +700,7 @@ namespace Skore
 		{
 			if (m_WriteData->Storage->Data.compare_exchange_strong(m_ReadData, m_WriteData))
 			{
-				repository.ToCollectItems.enqueue(DestroyResourceData{
+				repository->ToCollectItems.enqueue(DestroyResourceData{
 					.Data = m_ReadData,
 					.DestroySubObjects = true,
 					.DestroyResource = false

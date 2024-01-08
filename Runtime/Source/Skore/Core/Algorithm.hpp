@@ -73,20 +73,31 @@ namespace Skore
 		b = (T&&)temp;
 	}
 
-	//TODO - replace by a better algorithm like Introsort
+	template<typename T, typename F>
+	inline T* Partition(T* begin, T* end, const F& comp)
+	{
+		T* pivot = end - 1;
+		T* i = begin - 1;
+		for (T* j = begin; j < end - 1; ++j)
+		{
+			if (comp(*j, *pivot))
+			{
+				++i;
+				Swap(*i, *j);
+			}
+		}
+		Swap(*(i + 1), *pivot);
+		return i + 1;
+	}
+
 	template<typename T, typename F>
 	inline void Sort(T* begin, T* end, const F& comp)
 	{
-		usize size = (end - begin);
-		for (int i = 0; i < size - 1; ++i)
+		if (begin < end)
 		{
-			for (int j = 0; j < size - i - 1; ++j)
-			{
-				if (comp(begin[j], begin[j + 1]))
-				{
-					Swap(begin[j], begin[j + 1]);
-				}
-			}
+			T* pivot = Partition(begin, end, comp);
+			Sort(begin, pivot, comp);
+			Sort(pivot + 1, end, comp);
 		}
 	}
 
